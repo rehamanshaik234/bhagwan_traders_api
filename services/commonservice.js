@@ -72,7 +72,8 @@ async function getRoute(req, res) {
 async function getCurrentLocation(req, res) {
   var resp = new Object();
   try {
-    resp.result = await cacheService.getByIdItemCache(tables.VehicleRoute, parseInt(req.params.id));
+    var sql = "select * from vehicle_route where route_id = " + parseInt(req.params.id);
+    resp.result = await fndb.customQuery(tables.VehicleRoute, sql);
     resp.success = true;
     resp.message = "All data";
   } catch (err) {
