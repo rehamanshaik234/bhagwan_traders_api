@@ -71,8 +71,8 @@ async function authenticate(req, res) {
           usr.routeNo = '';
         }
 
-        const token = jwt.sign({ sub: usr.Id }, apiConfig.jwtSecret);
-        await updateLastLogin(usr.Id);
+        const token = jwt.sign({ sub: usr.id }, apiConfig.jwtSecret);
+        await updateLastLogin(usr.id);
         usr.token = token;
         resp.result = usr;
         resp.success = true;
@@ -119,8 +119,8 @@ async function authenticateOTP(req, res) {
           usr.routeNo = '';
         }
 
-        const token = jwt.sign({ sub: usr.Id }, apiConfig.jwtSecret);
-        await updateLastLogin(usr.Id);
+        const token = jwt.sign({ sub: usr.id }, apiConfig.jwtSecret);
+        await updateLastLogin(usr.id);
         usr.token = token;
         resp.result = usr;
         resp.success = true;
@@ -148,8 +148,8 @@ async function getUsers(req, res) {
   var resp = new Object();
   try {
     var result;
-    if(req.body.Id) {
-      result = await cacheService.getByIdItemCache(tables.Users, req.body.Id);
+    if(req.body.id) {
+      result = await cacheService.getByIdItemCache(tables.Users, req.body.id);
     } else if (req.body.onlyActive) {
       result = await cacheService.getActiveBranchItemsCache(tables.Users, req.body.branchId);
     } else {
