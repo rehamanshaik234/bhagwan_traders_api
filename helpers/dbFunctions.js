@@ -65,14 +65,14 @@ async function getItemById(tableName, dataId) {
       "SELECT * FROM " + tableName + " WHERE " + keyCol + " = " + dataId;
     const result = await sqlTransaction(queryText, "");
     var resultArray = await transformColumns(tableName, result);
-    return resultArray;
+    return resultArray.length>0? resultArray[0]: null;
   } catch (err) {
     fnCommon.logErrorMsg("dbFunctions - getAllItems", null, err.message);
     return null;
   }
 }
 
-async function getItemByColumn(tableName, colName, colValue, isNumber = fale) {
+async function getItemByColumn(tableName, colName, colValue, isNumber = false) {
   try {
     const keyCol = tablecols.getKeyColumn(tableName);
     let queryText =

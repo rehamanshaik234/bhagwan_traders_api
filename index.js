@@ -2,7 +2,6 @@ const http = require("http");
 const express = require("express");
 const app = express();
 const cors = require("cors");
-let cacheProvider = require("./helpers/cacheProvider");
 
 app.use(express.json({ limit: "50mb" }));
 app.use(
@@ -10,8 +9,6 @@ app.use(
 );
 
 app.use(cors());
-
-cacheProvider.start();
 
 app.get("/gpsapi/", (req, res) => {
   res.json({ message: "GPS Tracking API Service" });

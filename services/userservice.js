@@ -7,7 +7,6 @@ const tables = require("../helpers/tableNames.js");
 const tablecols = require("../helpers/tableColumns.js");
 const fnCommon = require("../helpers/commonFunctions.js");
 const fndb = require("../helpers/dbFunctions.js");
-const cacheService = require("./cacheservice");
 const apiConfig = require("../config/config.json");
 
 router.post("/registerUser", registerUser);
@@ -26,16 +25,16 @@ async function registerUser(req, res) {
   var resp = new Object();
   try {
     let newUser = req.body;
-    var chkUser = await cacheService.getItemByColumnCache(tables.Users,"UserName",newUser.userName);
+    const usrCols = tablecols.getColumns(tables.Users);
+    var chkUser = await fndb.getItemByColumn(tables.Users, usrCols.UserName, newUser.UserName);
     if (chkUser && chkUser.length > 0) {
       resp.result = null;
       resp.success = false;
       resp.message = "Error: User already registered";
       return res.send(resp);
     }
-    newUser.userPassword = CryptoJS.AES.encrypt(newUser.UserPassword.toString(),apiConfig.userpwdsecret).toString();
-    await cacheService.clearTableCache(tables.Users);
-    var result = await cacheService.addNewItemCache(tables.Users,newUser);
+    newUser.UserPassword = CryptoJS.AES.encrypt(newUser.UserPassword.toString(),config.userpwdsecret).toString();
+    var result = await fndb.addNewItem(tables.Users,newUser);
     resp.result = result;
     resp.success = true;
     resp.message = "Save data";
@@ -51,7 +50,8 @@ async function registerUser(req, res) {
 async function authenticate(req, res) {
   var resp = new Object();
   try {
-    let result = await cacheService.getItemByColumnCache(tables.Users,"userName", req.body.userName);
+    const usrCols = tablecols.getColumns(tables.Users);
+    let result = await fndb.getItemByColumn(tables.Users, usrCols.UserName, req.body.userName);
     if (result && result.length > 0 && result[0].isActive == 1) {
       let usr = result[0];
       var bytes = CryptoJS.AES.decrypt(usr.userPassword.toString(), apiConfig.userpwdsecret);
@@ -149,11 +149,11 @@ async function getUsers(req, res) {
   try {
     var result;
     if(req.body.id) {
-      result = await cacheService.getByIdItemCache(tables.Users, req.body.id);
+      result = await fndb.getItemById(tables.Users, req.body.id);
     } else if (req.body.onlyActive) {
-      result = await cacheService.getActiveBranchItemsCache(tables.Users, req.body.branchId);
+      result = await fndb.getActiveBranchItems(tables.Users, req.body.branchId);
     } else {
-      result = await cacheService.getAllBranchItemsCache(tables.Users, req.body.branchId);
+      result = await fndb.getAllBranchItems(tables.Users, req.body.branchId);
     }
 
     if (result) {
@@ -178,8 +178,7 @@ async function updateUser(req, res) {
   try {
     let newUser = req.body;
     delete newUser.UserPassword;
-    await cacheService.clearTableCache(tables.Users);
-    resp.result = await cacheService.updateItemCache(tables.Users,req.params.id,newUser);
+    resp.result = await fndb.updateItem(tables.Users,req.params.id,newUser);
     resp.success = true;
     resp.message = "Data Updated";
   } catch (err) {
@@ -196,7 +195,7 @@ async function userChangePassword(req, res) {
   try {
     const keyCol = tablecols.getKeyColumn(tables.Users);
     const cols = tablecols.getColumns(tables.Users);
-    const usr = await cacheService.getByIdItemCache(tables.Users,req.params.id);
+    const usr = await fndb.getItemById(tables.Users,req.params.id);
 
     var bytes = CryptoJS.AES.decrypt(usr.UserPassword, apiConfig.userpwdsecret);
     var originalPwd = bytes.toString(CryptoJS.enc.Utf8);
@@ -204,7 +203,6 @@ async function userChangePassword(req, res) {
       let newPwd = CryptoJS.AES.encrypt(req.body.UserPassword.toString(),apiConfig.userpwdsecret).toString();
       let queryText = "UPDATE `" + tables.Users + "` SET `" + cols.UserPassword + "`='" + newPwd + "' WHERE `" + keyCol + "` = " + req.params.id;
       var result = await fndb.customQuery(null, queryText);
-      await cacheService.clearTableCache(tables.Users);
       resp.result = result;
       resp.success = true;
       resp.message = "Paassword Changed";
@@ -224,8 +222,7 @@ async function userChangePassword(req, res) {
 async function deleteUser(req, res) {
   var resp = new Object();
   try {
-    await cacheService.clearTableCache(tables.Users);
-    var result = await cacheService.deleteItemCache(tables.Users, req.params.id);
+    var result = await fndb.deleteItem(tables.Users, req.params.id);
     resp.result = result;
     resp.success = true;
     resp.message = "Save data";
@@ -247,14 +244,14 @@ async function getUserDetByRefId(usr) {
           userDet.routeNo = 0;
           break;
         case 2:
-          result = await cacheService.getByIdItemCache(tables.Driver, usr.RefId);
+          result = await fndb.getItemById(tables.Driver, usr.RefId);
           if (result) {
             userDet.fullName = result.fullName;
             userDet.routeNo = 1;
           }
           break;
         case 3:
-            result = await cacheService.getByIdItemCache(tables.Student, usr.RefId);
+            result = await fndb.getItemById(tables.Student, usr.RefId);
             if (result) {
               userDet.fullName = result.fullName;
               userDet.routeNo = result.routeNo;
@@ -283,7 +280,6 @@ async function updateLastLogin(id) {
       "` = " +
       id;
     fndb.customQuery(null, queryText);
-    await cacheService.clearTableCache(tables.Users);
   } catch (err) {
     fnCommon.logErrorMsg("User Service - updateLastLogin", null, err.message);
   }
@@ -294,7 +290,7 @@ async function userResetPassword(req, res) {
   try {
     const keyCol = tablecols.getKeyColumn(tables.Users);
     const cols = tablecols.getColumns(tables.Users);
-    const usr = await cacheService.getByIdItemCache(
+    const usr = await fndb.getItemById(
       tables.Users,
       req.params.id
     );
@@ -316,7 +312,6 @@ async function userResetPassword(req, res) {
       "` = " +
       req.params.id;
     var result = await fndb.customQuery(null, queryText);
-    await cacheService.clearTableCache(tables.Users);
     resp.result = result;
     resp.success = true;
     resp.message = "Paassword Changed";

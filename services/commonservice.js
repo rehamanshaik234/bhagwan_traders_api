@@ -5,9 +5,7 @@ const tables = require("../helpers/tableNames.js");
 const tablecols = require("../helpers/tableColumns.js");
 const fnCommon = require("../helpers/commonFunctions.js");
 const fndb = require("../helpers/dbFunctions.js");
-const cacheService = require("./cacheservice");
 
-router.get("/clearAllCache", clearAllCache);
 router.post("/logInfoMsg", [authenticateToken.validJWTNeeded, logInfoMsg]);
 
 router.get("/getAssignedDriverRoute/:id", [getAssignedDriverRoute]);
@@ -17,15 +15,6 @@ router.post("/saveCurrentLocation", [saveCurrentLocation]);
 
 module.exports = router;
 
-async function clearAllCache(req, res) {
-  await cacheService.removeAllCache();
-  var resp = new Object();
-  resp.result = null;
-  resp.success = true;
-  resp.message = "Cache cleared";
-  return res.send(resp);
-}
-
 async function logInfoMsg(req, res) {
   fnCommon.logInfoMsg(req.body.msg);
   return res.send(true);
@@ -34,7 +23,8 @@ async function logInfoMsg(req, res) {
 async function getAssignedDriverRoute(req, res) {
   var resp = new Object();
   try {
-    var dbresult = await cacheService.getItemByColumnCache(tables.VehicleRoute, "driverId", parseInt(req.params.id));
+    let cols = tablecols.getColumns(tables.Users);
+    var dbresult = await fndb.getItemByColumn(tables.VehicleRoute, cols.driverId, parseInt(req.params.id));
     resp.result = dbresult.length > 0 ? dbresult[0] : new Object();
     resp.success = true;
     resp.message = "All data";
@@ -53,9 +43,9 @@ async function getRoute(req, res) {
     var routeId = parseInt(req.params.id);
     var dbresult = '';
     if(routeId > 0) {
-      dbresult = await cacheService.getByIdItemCache(tables.VehicleRoute, routeId);
+      dbresult = await fndb.getItemById(tables.VehicleRoute, routeId);
     } else {
-      dbresult = await cacheService.getAllItemsCache(tables.VehicleRoute);
+      dbresult = await fndb.getAllItems(tables.VehicleRoute);
     }
     resp.result = dbresult;
     resp.success = true;
@@ -99,7 +89,6 @@ async function saveCurrentLocation(req, res) {
     resp.result = req.body;
     resp.success = true;
     resp.message = "Saved data";
-    await cacheService.clearTableCache(tables.VehicleRoute);
   } catch (err) {
     fnCommon.logErrorMsg("Common Service - saveCurrentLocation", req, err.message);
     resp.result = req.body;
@@ -108,3 +97,31 @@ async function saveCurrentLocation(req, res) {
   }
   return res.send(resp);
 }
+
+async function registerUser(branchId, mobile, roleId, refId, emailId) {
+  try {
+     var chkUser = await fndb.getItemByColumn(Users, "mobile_no", mobile.toString().trim(), false);
+     if (chkUser && chkUser.length > 0) {
+        var newData = chkUser[0];
+        if(roleId == 6) {
+          newData.RefId += ',' + refId;
+          return await fndb.updateItem(Users, chkUser[0].id, newData);
+        } else {
+         return true;
+        }
+     } else {
+       let newPwd= CryptoJS.encrypt(mobile.toString().trim(), userpwdsecret).toString();
+       var nusr = { BranchId: branchId, UserRoleId: roleId, RefId: refId, Mobile: mobile, UserName: mobile, UserPassword: newPwd, IsActive: 1}
+       if(roleId == 6) {
+         return await addNewItemCache(Users, nusr, "System");
+       } else {
+         nusr.UserName = emailId;
+         return await addNewItemCache(Users, nusr, "System");
+       }
+       
+     }
+   } catch (err) {
+     fnCommon.logErrorMsg("Cache Service - registerUser", null, err.message);
+     return null;
+   }
+ }
