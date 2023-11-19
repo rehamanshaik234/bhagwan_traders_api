@@ -73,7 +73,6 @@ async function getItemById(tableName, dataId) {
 }
 
 async function getItemByColumn(tableName, colName, colValue, isNumber = false) {
-  try {
     const keyCol = tablecols.getKeyColumn(tableName);
     let queryText =
       "SELECT * FROM " + tableName + " WHERE `" + colName + "` = ";
@@ -82,6 +81,7 @@ async function getItemByColumn(tableName, colName, colValue, isNumber = false) {
     } else {
       queryText += "'" + colValue + "'";
     }
+  try {
     const result = await sqlTransaction(queryText, "");
     var resultArray = await transformColumns(tableName, result);
     return resultArray;

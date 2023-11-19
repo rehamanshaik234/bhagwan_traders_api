@@ -33,7 +33,7 @@ async function registerUser(req, res) {
       resp.message = "Error: User already registered";
       return res.send(resp);
     }
-    newUser.UserPassword = CryptoJS.AES.encrypt(newUser.UserPassword.toString(),config.userpwdsecret).toString();
+    newUser.UserPassword = CryptoJS.AES.encrypt(newUser.UserPassword.toString(), apiConfig.userpwdsecret).toString();
     var result = await fndb.addNewItem(tables.Users,newUser);
     resp.result = result;
     resp.success = true;
