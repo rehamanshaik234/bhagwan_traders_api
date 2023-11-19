@@ -31,10 +31,12 @@ function GetUserRoleId(roleName) {
   switch (roleName) {
     case "Administrator":
       return 1;
+    case "BranchHead":
+        return 2;
     case "Driver":
-      return 2;
-    case "Student":
       return 3;
+    case "Student":
+      return 4;
     default:
       return 0;
   }
@@ -45,8 +47,10 @@ function GetUserRole(id) {
     case 1:
       return "Administrator";
     case 2:
-      return "Driver";
+      return "BranchHead";
     case 3:
+      return "Driver";
+    case 4:
       return "Student";
     default:
       return "Anonymus";
