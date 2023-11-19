@@ -1,8 +1,8 @@
 {
-  "dbHost": "localhost",
-  "dbUser": "fltqoigl_vcpuser",
-  "dbPassword": "vilacampus@123",
-  "dataBaseName": "fltqoigl_vctracking",
+  "dbHost": "localhost:3307",
+  "dbUser": "root",
+  "dbPassword": "",
+  "dataBaseName": "vctracking",
   "userpwdsecret": "vctrackinguserpwdsecret",
   "jwtSecret": "vctrackingapijwtsecret"
 }

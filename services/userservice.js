@@ -14,9 +14,15 @@ router.post("/authenticate", authenticate);
 router.post("/authenticateOTP", authenticateOTP);
 router.post("/getUsers", [authenticateToken.validJWTNeeded, getUsers]);
 router.put("/updateUser/:id", [authenticateToken.validJWTNeeded, updateUser]);
-router.delete("/deleteUser/:id", [authenticateToken.validJWTNeeded, deleteUser]);
+router.delete("/deleteUser/:id", [
+  authenticateToken.validJWTNeeded,
+  deleteUser,
+]);
 
-router.put("/userChangePassword/:id", [authenticateToken.validJWTNeeded, userChangePassword]);
+router.put("/userChangePassword/:id", [
+  authenticateToken.validJWTNeeded,
+  userChangePassword,
+]);
 router.put("/userResetPassword/:id", [userResetPassword]);
 
 module.exports = router;
@@ -26,15 +32,22 @@ async function registerUser(req, res) {
   try {
     let newUser = req.body;
     const usrCols = tablecols.getColumns(tables.Users);
-    var chkUser = await fndb.getItemByColumn(tables.Users, usrCols.UserName, newUser.UserName);
+    var chkUser = await fndb.getItemByColumn(
+      tables.Users,
+      usrCols.UserName,
+      newUser.UserName
+    );
     if (chkUser && chkUser.length > 0) {
       resp.result = null;
       resp.success = false;
       resp.message = "Error: User already registered";
       return res.send(resp);
     }
-    newUser.UserPassword = CryptoJS.AES.encrypt(newUser.UserPassword.toString(), apiConfig.userpwdsecret).toString();
-    var result = await fndb.addNewItem(tables.Users,newUser);
+    newUser.UserPassword = CryptoJS.AES.encrypt(
+      newUser.UserPassword.toString(),
+      apiConfig.userpwdsecret
+    ).toString();
+    var result = await fndb.addNewItem(tables.Users, newUser);
     resp.result = result;
     resp.success = true;
     resp.message = "Save data";
@@ -51,10 +64,17 @@ async function authenticate(req, res) {
   var resp = new Object();
   try {
     const usrCols = tablecols.getColumns(tables.Users);
-    let result = await fndb.getItemByColumn(tables.Users, usrCols.UserName, req.body.userName);
+    let result = await fndb.getItemByColumn(
+      tables.Users,
+      usrCols.userName,
+      req.body.userName
+    );
     if (result && result.length > 0 && result[0].isActive == 1) {
       let usr = result[0];
-      var bytes = CryptoJS.AES.decrypt(usr.userPassword.toString(), apiConfig.userpwdsecret);
+      var bytes = CryptoJS.AES.decrypt(
+        usr.userPassword.toString(),
+        apiConfig.userpwdsecret
+      );
       var originalPwd = bytes.toString(CryptoJS.enc.Utf8);
       if (req.body.userPassword === originalPwd) {
         delete usr.userPassword;
@@ -63,12 +83,12 @@ async function authenticate(req, res) {
         delete usr.isActive;
 
         let udet = await getUserDetByRefId(usr);
-        if(udet && udet.fullName) {
+        if (udet && udet.fullName) {
           usr.fullName = udet.fullName;
           usr.routeNo = udet.routeNo;
         } else {
           usr.fullName = usr.UserName;
-          usr.routeNo = '';
+          usr.routeNo = "";
         }
 
         const token = jwt.sign({ sub: usr.id }, apiConfig.jwtSecret);
@@ -100,8 +120,13 @@ async function authenticateOTP(req, res) {
   var resp = new Object();
   try {
     var isStudent = req.body.isStudent;
-    let result = await fndb.getItemByColumn(tables.Users,"mobile_no","" + req.body.Mobile, true);
-    
+    let result = await fndb.getItemByColumn(
+      tables.Users,
+      "mobile_no",
+      "" + req.body.Mobile,
+      true
+    );
+
     if (result.length > 0) {
       let usr = result[0];
       if (parseInt(req.body.passwordOTP) == parseInt(usr.mobileOTP)) {
@@ -111,12 +136,12 @@ async function authenticateOTP(req, res) {
         delete usr.isActive;
 
         let udet = await getUserDetByRefId(usr);
-        if(udet && udet.FullName) {
+        if (udet && udet.FullName) {
           usr.fullName = udet.fullName;
           usr.routeNo = udet.routeNo;
         } else {
           usr.fullName = usr.UserName;
-          usr.routeNo = '';
+          usr.routeNo = "";
         }
 
         const token = jwt.sign({ sub: usr.id }, apiConfig.jwtSecret);
@@ -148,7 +173,7 @@ async function getUsers(req, res) {
   var resp = new Object();
   try {
     var result;
-    if(req.body.id) {
+    if (req.body.id) {
       result = await fndb.getItemById(tables.Users, req.body.id);
     } else if (req.body.onlyActive) {
       result = await fndb.getActiveBranchItems(tables.Users, req.body.branchId);
@@ -157,8 +182,8 @@ async function getUsers(req, res) {
     }
 
     if (result) {
-      for(var i=0;i<result.length;i++){
-        result[i].UserPassword ="";
+      for (var i = 0; i < result.length; i++) {
+        result[i].UserPassword = "";
       }
     }
     resp.result = result;
@@ -178,7 +203,7 @@ async function updateUser(req, res) {
   try {
     let newUser = req.body;
     delete newUser.UserPassword;
-    resp.result = await fndb.updateItem(tables.Users,req.params.id,newUser);
+    resp.result = await fndb.updateItem(tables.Users, req.params.id, newUser);
     resp.success = true;
     resp.message = "Data Updated";
   } catch (err) {
@@ -195,13 +220,26 @@ async function userChangePassword(req, res) {
   try {
     const keyCol = tablecols.getKeyColumn(tables.Users);
     const cols = tablecols.getColumns(tables.Users);
-    const usr = await fndb.getItemById(tables.Users,req.params.id);
+    const usr = await fndb.getItemById(tables.Users, req.params.id);
 
     var bytes = CryptoJS.AES.decrypt(usr.UserPassword, apiConfig.userpwdsecret);
     var originalPwd = bytes.toString(CryptoJS.enc.Utf8);
     if (originalPwd === req.body.CurrentPassword) {
-      let newPwd = CryptoJS.AES.encrypt(req.body.UserPassword.toString(),apiConfig.userpwdsecret).toString();
-      let queryText = "UPDATE `" + tables.Users + "` SET `" + cols.UserPassword + "`='" + newPwd + "' WHERE `" + keyCol + "` = " + req.params.id;
+      let newPwd = CryptoJS.AES.encrypt(
+        req.body.UserPassword.toString(),
+        apiConfig.userpwdsecret
+      ).toString();
+      let queryText =
+        "UPDATE `" +
+        tables.Users +
+        "` SET `" +
+        cols.UserPassword +
+        "`='" +
+        newPwd +
+        "' WHERE `" +
+        keyCol +
+        "` = " +
+        req.params.id;
       var result = await fndb.customQuery(null, queryText);
       resp.result = result;
       resp.success = true;
@@ -239,27 +277,27 @@ async function getUserDetByRefId(usr) {
   var userDet = new Object();
   let result;
   switch (usr.UserRoleId) {
-        case 1:
-        case 2:
-          userDet.fullName = usr.userName + " (Administrator)";
-          userDet.routeNo = 0;
-          break;
-        case 3:
-          result = await fndb.getItemById(tables.Driver, usr.RefId);
-          if (result) {
-            userDet.fullName = result.fullName;
-            userDet.routeNo = 1;
-          }
-          break;
-        case 4:
-            result = await fndb.getItemById(tables.Student, usr.RefId);
-            if (result) {
-              userDet.fullName = result.fullName;
-              userDet.routeNo = result.routeNo;
-            }
-            break;
-        default:
-          userDet.fullName = usr.userName;
+    case 1:
+    case 2:
+      userDet.fullName = usr.userName + " (Administrator)";
+      userDet.routeNo = 0;
+      break;
+    case 3:
+      result = await fndb.getItemById(tables.Driver, usr.RefId);
+      if (result) {
+        userDet.fullName = result.fullName;
+        userDet.routeNo = 1;
+      }
+      break;
+    case 4:
+      result = await fndb.getItemById(tables.Student, usr.RefId);
+      if (result) {
+        userDet.fullName = result.fullName;
+        userDet.routeNo = result.routeNo;
+      }
+      break;
+    default:
+      userDet.fullName = usr.userName;
   }
   return userDet;
 }
@@ -291,10 +329,7 @@ async function userResetPassword(req, res) {
   try {
     const keyCol = tablecols.getKeyColumn(tables.Users);
     const cols = tablecols.getColumns(tables.Users);
-    const usr = await fndb.getItemById(
-      tables.Users,
-      req.params.id
-    );
+    const usr = await fndb.getItemById(tables.Users, req.params.id);
 
     let newPwd = CryptoJS.AES.encrypt(
       req.body.userPassword.toString(),

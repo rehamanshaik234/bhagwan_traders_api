@@ -12,6 +12,7 @@ router.get("/getAssignedDriverRoute/:id", [getAssignedDriverRoute]);
 router.get("/getRoute/:id", [getRoute]);
 router.get("/getCurrentLocation/:id", [getCurrentLocation]);
 router.post("/saveCurrentLocation", [saveCurrentLocation]);
+router.put("/updateRoute", updateRoute);
 
 module.exports = router;
 
@@ -165,4 +166,23 @@ async function registerUser(branchId, mobile, roleId, refId, emailId) {
     fnCommon.logErrorMsg("Cache Service - registerUser", null, err.message);
     return null;
   }
+}
+
+async function updateRoute(req, res) {
+  var resp = new Object();
+  try {
+    let route = req.body;
+    let routeId = route.routeId;
+    console.log(routeId);
+    delete route.routeId;
+    resp.result = await fndb.updateItem(tables.VehicleRoute, routeId, route);
+    resp.success = true;
+    resp.message = "Data Updated";
+  } catch (err) {
+    fnCommon.logErrorMsg("User Service - updateUser", req, err.message);
+    resp.result = null;
+    resp.success = false;
+    resp.message = "Error: Error in update user - user service";
+  }
+  return res.send(resp);
 }

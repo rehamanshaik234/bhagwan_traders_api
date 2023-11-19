@@ -1,7 +1,7 @@
 {
   "dbHost": "localhost",
-  "dbUser": "apivila",
-  "dbPassword": "vila@123",
+  "dbUser": "vctracking",
+  "dbPassword": "Rehaman@234",
   "dataBaseName": "vctracking",
   "userpwdsecret": "vctrackinguserpwdsecret",
   "jwtSecret": "vctrackingapijwtsecret"
