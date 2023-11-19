@@ -240,17 +240,18 @@ async function getUserDetByRefId(usr) {
   let result;
   switch (usr.UserRoleId) {
         case 1:
+        case 2:
           userDet.fullName = usr.userName + " (Administrator)";
           userDet.routeNo = 0;
           break;
-        case 2:
+        case 3:
           result = await fndb.getItemById(tables.Driver, usr.RefId);
           if (result) {
             userDet.fullName = result.fullName;
             userDet.routeNo = 1;
           }
           break;
-        case 3:
+        case 4:
             result = await fndb.getItemById(tables.Student, usr.RefId);
             if (result) {
               userDet.fullName = result.fullName;
