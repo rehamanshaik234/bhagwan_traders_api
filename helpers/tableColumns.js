@@ -16,7 +16,7 @@ function getColumns(tableName) {
     lastLogin: "last_login",
     isActive: "is_active",
   };
-  
+
   const BranchCols = {
     branchHead: "branch_head",
     branchName: "branch_name",
@@ -24,13 +24,13 @@ function getColumns(tableName) {
     contactNumber: "contact_number",
     emailId: "email_id",
   };
-  
+
   const DriverCols = {
     branchId: "branch_id",
     fullName: "full_name",
     address: "address",
     mobile: "mobile",
-    drivingLicense: "driving_license"
+    drivingLicense: "driving_license",
   };
 
   const StudentCols = {
@@ -40,19 +40,21 @@ function getColumns(tableName) {
     emailId: "email_id",
     address: "address",
     routeNo: "route_no",
-    onBoardPoint: "onboard_point"
+    onBoardPoint: "onboard_point",
   };
 
   const VehicleCols = {
+    id: "id",
     branchId: "branch_id",
     vehicleType: "vehicle_type",
     vehicleModel: "vehicle_model",
     vehicleRegNo: "vehicle_regno",
     seatCapacity: "seat_capacity",
-    otherDetails: "other_det"
+    otherDetails: "other_det",
   };
 
   const VehicleRouteCols = {
+    routeId: "route_id",
     branchId: "branch_id",
     vehicleId: "vehicle_id",
     driverId: "driver_id",
@@ -61,7 +63,7 @@ function getColumns(tableName) {
     currentLongitude: "current_longitude",
     lastUpdateTime: "last_update_time",
     isOnline: "is_online",
-    isActive: "is_active"
+    isActive: "is_active",
   };
 
   switch (tableName) {
@@ -83,7 +85,7 @@ function getColumns(tableName) {
     case tableNames.VehicleRoute:
       return VehicleRouteCols;
 
-    case '':
+    case "":
     default:
       return Object.assign(
         {},
@@ -127,5 +129,3 @@ function getKeyColumn(tableName) {
       return "id";
   }
 }
-
-

@@ -65,7 +65,7 @@ async function getItemById(tableName, dataId) {
       "SELECT * FROM " + tableName + " WHERE " + keyCol + " = " + dataId;
     const result = await sqlTransaction(queryText, "");
     var resultArray = await transformColumns(tableName, result);
-    return resultArray.length>0? resultArray[0]: null;
+    return resultArray.length > 0 ? resultArray[0] : null;
   } catch (err) {
     fnCommon.logErrorMsg("dbFunctions - getAllItems", null, err.message);
     return null;
@@ -73,20 +73,24 @@ async function getItemById(tableName, dataId) {
 }
 
 async function getItemByColumn(tableName, colName, colValue, isNumber = false) {
-    const keyCol = tablecols.getKeyColumn(tableName);
-    let queryText =
-      "SELECT * FROM " + tableName + " WHERE `" + colName + "` = ";
-    if (isNumber) {
-      queryText += colValue;
-    } else {
-      queryText += "'" + colValue + "'";
-    }
+  const keyCol = tablecols.getKeyColumn(tableName);
+  let queryText = "SELECT * FROM " + tableName + " WHERE `" + colName + "` = ";
+  if (isNumber) {
+    queryText += colValue;
+  } else {
+    queryText += "'" + colValue + "'";
+  }
+  console.log(queryText);
   try {
     const result = await sqlTransaction(queryText, "");
     var resultArray = await transformColumns(tableName, result);
     return resultArray;
   } catch (err) {
-    fnCommon.logErrorMsg("dbFunctions - getItemByColumn", queryText, err.message);
+    fnCommon.logErrorMsg(
+      "dbFunctions - getItemByColumn",
+      queryText,
+      err.message
+    );
     return null;
   }
 }
@@ -117,7 +121,11 @@ async function addNewItem(tableName, data) {
     var result = await sqlTransaction(queryText, dataVal);
     return result.affectedRows > 0 ? result.insertId : 0;
   } catch (err) {
-    fnCommon.logErrorMsg("dbFunctions - addNewItem - table data", null, tableName + ' - ' + JSON.stringify(data));
+    fnCommon.logErrorMsg(
+      "dbFunctions - addNewItem - table data",
+      null,
+      tableName + " - " + JSON.stringify(data)
+    );
     fnCommon.logErrorMsg("dbFunctions - addNewItem", null, err.message);
     return null;
   }
@@ -148,8 +156,12 @@ async function updateItem(tableName, dataId, data) {
       " = " +
       dataId;
     const result = await sqlTransaction(queryText, values);
-    if(result.affectedRows == 0) {
-      fnCommon.logErrorMsg("dbFunctions - updateItem - db result", null, result);
+    if (result.affectedRows == 0) {
+      fnCommon.logErrorMsg(
+        "dbFunctions - updateItem - db result",
+        null,
+        result
+      );
     }
     return result.affectedRows > 0 ? true : false;
   } catch (err) {
@@ -172,9 +184,10 @@ async function deleteItem(tableName, dataId) {
 }
 async function customQuery(tableName, queryText) {
   try {
+    console.log(queryText);
     const result = await sqlTransaction(queryText, "");
     var resultArray = await transformColumns(tableName, result);
-    if(resultArray && resultArray.length > 0) {
+    if (resultArray && resultArray.length > 0) {
       return resultArray;
     } else {
       return result;

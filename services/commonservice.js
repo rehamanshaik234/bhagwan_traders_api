@@ -5,12 +5,14 @@ const tables = require("../helpers/tableNames.js");
 const tablecols = require("../helpers/tableColumns.js");
 const fnCommon = require("../helpers/commonFunctions.js");
 const fndb = require("../helpers/dbFunctions.js");
+const tableNames = require("../helpers/tableNames.js");
 
 router.post("/logInfoMsg", [authenticateToken.validJWTNeeded, logInfoMsg]);
 
 router.get("/getAssignedDriverRoute/:id", [getAssignedDriverRoute]);
-router.get("/getRoute/:id", [getRoute]);
+router.post("/getRoute", [getRoute]);
 router.get("/getCurrentLocation/:id", [getCurrentLocation]);
+router.get("/getAllVehicleInfo/:id", [getAllVehicleInfo]);
 router.post("/saveCurrentLocation", [saveCurrentLocation]);
 router.put("/updateRoute", updateRoute);
 
@@ -49,12 +51,31 @@ async function getAssignedDriverRoute(req, res) {
 async function getRoute(req, res) {
   var resp = new Object();
   try {
-    var routeId = parseInt(req.params.id);
+    let cols = tablecols.getColumns(tables.VehicleRoute);
+    var routeId = parseInt(req.body.routeId);
+    var branchId = parseInt(req.body.branchId);
     var dbresult = "";
     if (routeId > 0) {
-      dbresult = await fndb.getItemById(tables.VehicleRoute, routeId);
+      let sql =
+        "select * from " +
+        tables.VehicleRoute +
+        " where " +
+        cols.routeId +
+        " = " +
+        routeId +
+        " and " +
+        cols.branchId +
+        " = " +
+        branchId;
+      console.log(sql);
+      dbresult = await fndb.customQuery(tables.VehicleRoute, sql);
     } else {
-      dbresult = await fndb.getAllItems(tables.VehicleRoute);
+      dbresult = await fndb.getItemByColumn(
+        tables.VehicleRoute,
+        cols.branchId,
+        branchId,
+        true
+      );
     }
     resp.result = dbresult;
     resp.success = true;
@@ -183,6 +204,38 @@ async function updateRoute(req, res) {
     resp.result = null;
     resp.success = false;
     resp.message = "Error: Error in update user - user service";
+  }
+  return res.send(resp);
+}
+
+async function getAllVehicleInfo(req, res) {
+  var resp = new Object();
+  try {
+    var branchId = parseInt(req.params.id);
+    let vehicleRouteCols = tablecols.getColumns(tables.VehicleRoute);
+    let vehicleCols = tablecols.getColumns(tables.Vehicle);
+    var sql =
+      "SELECT " +
+      tableNames.VehicleRoute +
+      ".* ," +
+      tableNames.Vehicle +
+      ".*," +
+      tableNames.Driver +
+      ".* FROM vehicle_route INNER JOIN vehicle  ON vehicle_route.vehicle_id = vehicle.vehicle_id" +
+      " INNER JOIN driver ON vehicle_route.driver_id = driver.driver_id WHERE vehicle_route.branch_id =" +
+      branchId;
+    resp.result = await fndb.customQuery(tables.VehicleRoute, sql);
+    resp.success = true;
+    resp.message = "Saved data";
+  } catch (err) {
+    fnCommon.logErrorMsg(
+      "Common Service - saveCurrentLocation",
+      req,
+      err.message
+    );
+    resp.result = req.body;
+    resp.success = false;
+    resp.message = "Error: Error in getting information";
   }
   return res.send(resp);
 }
