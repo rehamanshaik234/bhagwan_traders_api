@@ -212,19 +212,11 @@ async function getAllVehicleInfo(req, res) {
   var resp = new Object();
   try {
     var branchId = parseInt(req.params.id);
-    let vehicleRouteCols = tablecols.getColumns(tables.VehicleRoute);
-    let vehicleCols = tablecols.getColumns(tables.Vehicle);
-    var sql =
-      "SELECT " +
-      tableNames.VehicleRoute +
-      ".* ," +
-      tableNames.Vehicle +
-      ".*," +
-      tableNames.Driver +
-      ".* FROM vehicle_route INNER JOIN vehicle  ON vehicle_route.vehicle_id = vehicle.vehicle_id" +
-      " INNER JOIN driver ON vehicle_route.driver_id = driver.driver_id WHERE vehicle_route.branch_id =" +
-      branchId;
-    resp.result = await fndb.customQuery(tables.VehicleRoute, sql);
+    var sql = "SELECT vr.route_id as 'Id', vr.vehicle_id, vr.driver_id, vr.route_number, v.vehicle_id as 'VehicleId', v.vehicle_type, v.vehicle_regno, " +
+        "d.driver_id as 'DriverId', d.full_name as 'FullName' FROM vehicle_route vr INNER JOIN vehicle v ON vr.vehicle_id = v.vehicle_id " +
+        "INNER JOIN driver d ON vr.driver_id = d.driver_id WHERE vehicle_route.branch_id =" + branchId;
+     
+    resp.result = await fndb.customQuery(null, sql); //If data coming rfrom multiple tables use null
     resp.success = true;
     resp.message = "Saved data";
   } catch (err) {
