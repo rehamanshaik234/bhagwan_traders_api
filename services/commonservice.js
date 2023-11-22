@@ -14,7 +14,10 @@ router.post("/getRoute", [getRoute]);
 router.get("/getCurrentLocation/:id", [getCurrentLocation]);
 router.get("/getAllVehicleInfo/:id", [getAllVehicleInfo]);
 router.post("/saveCurrentLocation", [saveCurrentLocation]);
+router.post("/assignDriver", [assignDriver]);
+router.put("/updateAssignedDriver", [updateAssignedDriver]);
 router.put("/updateRoute", updateRoute);
+router.post("/removeAssignedDriver", removeAssignedDriver);
 
 module.exports = router;
 
@@ -214,16 +217,47 @@ async function getAllVehicleInfo(req, res) {
     var branchId = parseInt(req.params.id);
     let vehicleRouteCols = tablecols.getColumns(tables.VehicleRoute);
     let vehicleCols = tablecols.getColumns(tables.Vehicle);
+    let driverCols = tablecols.getColumns(tables.Driver);
     var sql =
       "SELECT " +
       tableNames.VehicleRoute +
-      ".* ," +
+      ".*,  " +
       tableNames.Vehicle +
-      ".*," +
+      ".*,  " +
       tableNames.Driver +
-      ".* FROM vehicle_route INNER JOIN vehicle  ON vehicle_route.vehicle_id = vehicle.vehicle_id" +
-      " INNER JOIN driver ON vehicle_route.driver_id = driver.driver_id WHERE vehicle_route.branch_id =" +
-      branchId;
+      ".* FROM  " +
+      tableNames.Vehicle +
+      " LEFT JOIN  " +
+      tableNames.VehicleRoute +
+      " ON " +
+      tableNames.Vehicle +
+      ". " +
+      vehicleCols.vehicleId +
+      " = " +
+      tableNames.VehicleRoute +
+      "." +
+      vehicleRouteCols.vehicleId +
+      " LEFT JOIN  " +
+      tableNames.Driver +
+      " ON  " +
+      tableNames.VehicleRoute +
+      "." +
+      vehicleRouteCols.driverId +
+      " =  " +
+      tableNames.Driver +
+      "." +
+      driverCols.driverId +
+      " WHERE  " +
+      tableNames.VehicleRoute +
+      "." +
+      vehicleRouteCols.branchId +
+      " = " +
+      branchId +
+      " OR  " +
+      tableNames.VehicleRoute +
+      "." +
+      vehicleRouteCols.branchId +
+      " IS NULL";
     resp.result = await fndb.customQuery(tables.VehicleRoute, sql);
     resp.success = true;
     resp.message = "Saved data";
@@ -236,6 +270,99 @@ async function getAllVehicleInfo(req, res) {
     resp.result = req.body;
     resp.success = false;
     resp.message = "Error: Error in getting information";
+  }
+  return res.send(resp);
+}
+
+async function assignDriver(req, res) {
+  var resp = new Object();
+  try {
+    let data = req.body;
+    let vehicleRouteCols = tablecols.getColumns(tables.VehicleRoute);
+    console.log(data);
+    const driverInfo = await fndb.getItemByColumn(
+      tableNames.VehicleRoute,
+      vehicleRouteCols.driverId,
+      data.driverId
+    );
+    if (driverInfo.length == 0) {
+      const routeNumber = await fndb.getItemByColumn(
+        tableNames.VehicleRoute,
+        vehicleRouteCols.routeNumber,
+        data.routeNumber
+      );
+      if (routeNumber.length == 0) {
+        resp.result = await fndb.addNewItem(tables.VehicleRoute, data);
+        resp.success = true;
+        resp.message = "Data Updated";
+      } else {
+        resp.result = {};
+        resp.success = false;
+        resp.message = "RouteNumber Already In Use";
+      }
+    } else {
+      resp.result = {};
+      resp.success = false;
+      resp.message = "Driver Already Assigned";
+    }
+  } catch (err) {
+    fnCommon.logErrorMsg("User Service - updateUser", req, err.message);
+    resp.result = null;
+    resp.success = false;
+    resp.message = "Error: Error in Assign Driver - common service";
+  }
+  return res.send(resp);
+}
+
+async function updateAssignedDriver(req, res) {
+  var resp = new Object();
+  try {
+    let data = req.body;
+    let vehicleRouteCols = tablecols.getColumns(tables.VehicleRoute);
+    console.log(data);
+    const driverInfo = await fndb.getItemByColumn(
+      tableNames.VehicleRoute,
+      vehicleRouteCols.driverId,
+      data.driverId
+    );
+    if (driverInfo.length == 0) {
+      resp.result = await fndb.updateItem(
+        tables.VehicleRoute,
+        data.routeId,
+        data
+      );
+      resp.success = true;
+      resp.message = "Data Updated";
+    } else {
+      resp.result = {};
+      resp.success = false;
+      resp.message = "Driver Already Assigned";
+    }
+  } catch (err) {
+    fnCommon.logErrorMsg("User Service - updateUser", req, err.message);
+    resp.result = null;
+    resp.success = false;
+    resp.message = "Error: Error in Assign Driver - common service";
+  }
+  return res.send(resp);
+}
+
+async function removeAssignedDriver(req, res) {
+  var resp = new Object();
+  try {
+    let data = req.body;
+    resp.result = await fndb.updateItem(
+      tables.VehicleRoute,
+      data.routeId,
+      data
+    );
+    resp.success = true;
+    resp.message = "Driver Removed";
+  } catch (err) {
+    fnCommon.logErrorMsg("User Service - updateUser", req, err.message);
+    resp.result = null;
+    resp.success = false;
+    resp.message = "Error: Error in update user - user service";
   }
   return res.send(resp);
 }

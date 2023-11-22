@@ -26,6 +26,7 @@ function getColumns(tableName) {
   };
 
   const DriverCols = {
+    driverId: "driver_id",
     branchId: "branch_id",
     fullName: "full_name",
     address: "address",
@@ -44,7 +45,7 @@ function getColumns(tableName) {
   };
 
   const VehicleCols = {
-    id: "id",
+    vehicleId: "vehicle_id",
     branchId: "branch_id",
     vehicleType: "vehicle_type",
     vehicleModel: "vehicle_model",
