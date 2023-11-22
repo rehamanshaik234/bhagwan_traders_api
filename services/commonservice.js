@@ -213,7 +213,7 @@ async function getAllVehicleInfo(req, res) {
   try {
     var branchId = parseInt(req.params.id);
     var sql = "SELECT vr.route_id as 'Id', vr.vehicle_id, vr.driver_id, vr.route_number, v.vehicle_id as 'VehicleId', v.vehicle_type, v.vehicle_regno, " +
-        "d.driver_id as 'DriverId', d.full_name as 'FullName' FROM vehicle_route vr INNER JOIN vehicle v ON vr.vehicle_id = v.vehicle_id " +
+        "d.driver_id as 'DriverId', d.full_name as 'FullName', d.mobile FROM vehicle_route vr INNER JOIN vehicle v ON vr.vehicle_id = v.vehicle_id " +
         "INNER JOIN driver d ON vr.driver_id = d.driver_id WHERE vehicle_route.branch_id =" + branchId;
      
     resp.result = await fndb.customQuery(null, sql); //If data coming rfrom multiple tables use null
@@ -221,7 +221,7 @@ async function getAllVehicleInfo(req, res) {
     resp.message = "Saved data";
   } catch (err) {
     fnCommon.logErrorMsg(
-      "Common Service - saveCurrentLocation",
+      "Common Service - getAllVehicleInfo",
       req,
       err.message
     );
