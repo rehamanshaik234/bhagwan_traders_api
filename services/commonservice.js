@@ -15,6 +15,11 @@ router.get("/getBranchList", [getBranchList]);
 router.get("/getStudentsByRoute/:id", [getStudentsByRoute]);
 router.get("/getStudent/:id", [getStudent]);
 router.post("/saveStudent", [saveStudent]);
+router.delete("/deleteStudent/:id", [deleteStudent]);
+
+router.get("/getDriver/:id", [getDriver]);
+router.post("/saveDriver", [saveDriver]);
+router.delete("/deleteDriver/:id", [deleteDriver]);
 
 router.get("/getAssignedDriverRoute/:id", [getAssignedDriverRoute]);
 router.post("/getRoute", [getRoute]);
@@ -103,6 +108,82 @@ async function saveStudent(req, res) {
       req,
       err.message
     );
+    resp.result = null;
+    resp.success = false;
+    resp.message = "Error: Error in getting information";
+  }
+  return res.send(resp);
+}
+
+async function deleteStudent(req, res) {
+  var resp = new Object();
+  try {
+    resp.result = await fndb.deleteItem(tables.Student, req.params.id);
+    resp.success = true;
+    resp.message = "All data";
+  } catch (err) {
+    fnCommon.logErrorMsg("Common Service - deleteStudent", req, err.message);
+    resp.result = null;
+    resp.success = false;
+    resp.message = "Error: Error in getting information";
+  }
+  return res.send(resp);
+}
+
+async function getDriver(req, res) {
+  var resp = new Object();
+  try {
+
+    if(req.params.id > 0) {
+      resp.result = await fndb.getItemById(tables.Student, req.params.id);
+    } else {
+      resp.result = await fndb.getAllItems(tables.Student);
+    }
+    resp.success = true;
+    resp.message = "Students by Route";
+  } catch (err) {
+    fnCommon.logErrorMsg(
+      "Common Service - getDriver",
+      req,
+      err.message
+    );
+    resp.result = null;
+    resp.success = false;
+    resp.message = "Error: Error in getting information";
+  }
+  return res.send(resp);
+}
+
+async function saveDriver(req, res) {
+  var resp = new Object();
+  try {
+    if(req.body.Id) {
+      dbresult = await fndb.updateItem(tables.Driver, req.body.Id, req.body);
+    } else {
+      dbresult = await fndb.addNewItem(tables.Driver, req.body);
+    }
+
+  } catch (err) {
+    fnCommon.logErrorMsg(
+      "Common Service - saveDriver",
+      req,
+      err.message
+    );
+    resp.result = null;
+    resp.success = false;
+    resp.message = "Error: Error in getting information";
+  }
+  return res.send(resp);
+}
+
+async function deleteDriver(req, res) {
+  var resp = new Object();
+  try {
+    resp.result = await fndb.deleteItem(tables.Driver, req.params.id);
+    resp.success = true;
+    resp.message = "All data";
+  } catch (err) {
+    fnCommon.logErrorMsg("Common Service - deleteDriver", req, err.message);
     resp.result = null;
     resp.success = false;
     resp.message = "Error: Error in getting information";
