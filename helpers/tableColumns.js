@@ -18,6 +18,7 @@ function getColumns(tableName) {
   };
 
   const BranchCols = {
+    branchId: "branch_id",
     branchName: "branch_name",
     contactNumber: "contact_number",
   };

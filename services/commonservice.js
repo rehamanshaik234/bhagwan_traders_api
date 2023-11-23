@@ -9,7 +9,6 @@ const tableNames = require("../helpers/tableNames.js");
 
 router.post("/logInfoMsg", [authenticateToken.validJWTNeeded, logInfoMsg]);
 
-
 router.get("/getBranchList", [getBranchList]);
 
 router.get("/getStudentsByRoute/:id", [getStudentsByRoute]);
@@ -23,6 +22,7 @@ router.delete("/deleteDriver/:id", [deleteDriver]);
 
 router.get("/getAssignedDriverRoute/:id", [getAssignedDriverRoute]);
 router.post("/getRoute", [getRoute]);
+router.get("/getAllRoutes/:branchId", [getAllRoutes]);
 router.get("/getCurrentLocation/:id", [getCurrentLocation]);
 router.get("/getAllVehicleInfo/:id", [getAllVehicleInfo]);
 router.post("/saveCurrentLocation", [saveCurrentLocation]);
@@ -45,11 +45,7 @@ async function getBranchList(req, res) {
     resp.success = true;
     resp.message = "All Branch List";
   } catch (err) {
-    fnCommon.logErrorMsg(
-      "Common Service - getBranchList",
-      req,
-      err.message
-    );
+    fnCommon.logErrorMsg("Common Service - getBranchList", req, err.message);
     resp.result = null;
     resp.success = false;
     resp.message = "Error: Error in getting information";
@@ -61,7 +57,11 @@ async function getStudentsByRoute(req, res) {
   var resp = new Object();
   try {
     let cols = tablecols.getColumns(tables.Student);
-    resp.result = await fndb.getItemByColumn(tables.Student, cols.routeId, req.params.id);
+    resp.result = await fndb.getItemByColumn(
+      tables.Student,
+      cols.routeId,
+      req.params.id
+    );
     resp.success = true;
     resp.message = "Students by Route";
   } catch (err) {
@@ -84,11 +84,7 @@ async function getStudent(req, res) {
     resp.success = true;
     resp.message = "Students by Route";
   } catch (err) {
-    fnCommon.logErrorMsg(
-      "Common Service - getStudent",
-      req,
-      err.message
-    );
+    fnCommon.logErrorMsg("Common Service - getStudent", req, err.message);
     resp.result = null;
     resp.success = false;
     resp.message = "Error: Error in getting information";
@@ -99,18 +95,13 @@ async function getStudent(req, res) {
 async function saveStudent(req, res) {
   var resp = new Object();
   try {
-    if(req.body.Id) {
+    if (req.body.Id) {
       dbresult = await fndb.updateItem(tables.Student, req.body.Id, req.body);
     } else {
       dbresult = await fndb.addNewItem(tables.Student, req.body);
     }
-
   } catch (err) {
-    fnCommon.logErrorMsg(
-      "Common Service - saveStudent",
-      req,
-      err.message
-    );
+    fnCommon.logErrorMsg("Common Service - saveStudent", req, err.message);
     resp.result = null;
     resp.success = false;
     resp.message = "Error: Error in getting information";
@@ -136,8 +127,7 @@ async function deleteStudent(req, res) {
 async function getDriver(req, res) {
   var resp = new Object();
   try {
-
-    if(req.params.id > 0) {
+    if (req.params.id > 0) {
       resp.result = await fndb.getItemById(tables.Student, req.params.id);
     } else {
       resp.result = await fndb.getAllItems(tables.Student);
@@ -145,11 +135,7 @@ async function getDriver(req, res) {
     resp.success = true;
     resp.message = "Students by Route";
   } catch (err) {
-    fnCommon.logErrorMsg(
-      "Common Service - getDriver",
-      req,
-      err.message
-    );
+    fnCommon.logErrorMsg("Common Service - getDriver", req, err.message);
     resp.result = null;
     resp.success = false;
     resp.message = "Error: Error in getting information";
@@ -160,18 +146,13 @@ async function getDriver(req, res) {
 async function saveDriver(req, res) {
   var resp = new Object();
   try {
-    if(req.body.Id) {
+    if (req.body.Id) {
       dbresult = await fndb.updateItem(tables.Driver, req.body.Id, req.body);
     } else {
       dbresult = await fndb.addNewItem(tables.Driver, req.body);
     }
-
   } catch (err) {
-    fnCommon.logErrorMsg(
-      "Common Service - saveDriver",
-      req,
-      err.message
-    );
+    fnCommon.logErrorMsg("Common Service - saveDriver", req, err.message);
     resp.result = null;
     resp.success = false;
     resp.message = "Error: Error in getting information";
@@ -193,7 +174,6 @@ async function deleteDriver(req, res) {
   }
   return res.send(resp);
 }
-
 
 async function getAssignedDriverRoute(req, res) {
   var resp = new Object();
@@ -260,6 +240,31 @@ async function getRoute(req, res) {
   return res.send(resp);
 }
 
+async function getAllRoutes(req, res) {
+  var resp = new Object();
+  try {
+    let cols = tablecols.getColumns(tables.VehicleRoute);
+    var branchId = parseInt(req.params.branchId);
+    var dbresult = "";
+    let sql =
+      "select * from " +
+      tables.VehicleRoute +
+      " where " +
+      cols.branchId +
+      " = " +
+      branchId;
+    dbresult = await fndb.customQuery(tables.VehicleRoute, sql);
+    resp.result = dbresult;
+    resp.success = true;
+    resp.message = "All data";
+  } catch (err) {
+    fnCommon.logErrorMsg("Common Service - getRoute", req, err.message);
+    resp.result = null;
+    resp.success = false;
+    resp.message = "Error: Error in getting information";
+  }
+  return res.send(resp);
+}
 async function getCurrentLocation(req, res) {
   var resp = new Object();
   try {
