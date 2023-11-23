@@ -18,11 +18,8 @@ function getColumns(tableName) {
   };
 
   const BranchCols = {
-    branchHead: "branch_head",
     branchName: "branch_name",
-    branchAddress: "branch_address",
     contactNumber: "contact_number",
-    emailId: "email_id",
   };
 
   const DriverCols = {
@@ -37,10 +34,8 @@ function getColumns(tableName) {
     branchId: "branch_id",
     fullName: "full_name",
     mobile: "mobile",
-    emailId: "email_id",
     address: "address",
-    routeNo: "route_no",
-    onBoardPoint: "onboard_point",
+    routeId: "route_id",
   };
 
   const VehicleCols = {
