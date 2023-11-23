@@ -74,13 +74,12 @@ async function getItemById(tableName, dataId) {
 
 async function getItemByColumn(tableName, colName, colValue, isNumber = false) {
   const keyCol = tablecols.getKeyColumn(tableName);
-  let queryText = "SELECT * FROM " + tableName + " WHERE `" + colName + "` = ";
+  let queryText = "SELECT * FROM " + tableName + " WHERE " + colName + " = ";
   if (isNumber) {
     queryText += colValue;
   } else {
     queryText += "'" + colValue + "'";
   }
-  console.log(queryText);
   try {
     const result = await sqlTransaction(queryText, "");
     var resultArray = await transformColumns(tableName, result);
@@ -184,7 +183,6 @@ async function deleteItem(tableName, dataId) {
 }
 async function customQuery(tableName, queryText) {
   try {
-    console.log(queryText);
     const result = await sqlTransaction(queryText, "");
     var resultArray = await transformColumns(tableName, result);
     if (resultArray && resultArray.length > 0) {
