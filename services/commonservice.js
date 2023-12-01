@@ -180,24 +180,15 @@ async function deleteDriver(req, res) {
 
 async function getAssignedStudentRoute(req, res) {
   var resp = new Object();
-  var studentId = req.params.id;
   try {
-    let cols = tablecols.getColumns(tables.Student);
     let routeCols = tablecols.getColumns(tables.VehicleRoute);
-
-    var studentData = await fndb.getItemByColumn(
-      tables.Student,
-      cols.studentId,
-      studentId
+    var student = await fndb.getItemById(tables.Student, req.params.id);
+    var studentRoute = await fndb.getItemByColumn(
+      tables.VehicleRoute,
+      routeCols.routeId,
+      student.routeId
     );
-    console.log(studentData);
-    if (studentData.length > 0) {
-      var student = studentData[0];
-      var studentRoute = await fndb.getItemByColumn(
-        tables.VehicleRoute,
-        routeCols.routeId,
-        student.routeId
-      );
+    if (studentRoute.length > 0) {
       resp.result = studentRoute;
       resp.success = true;
       resp.message = "All data";

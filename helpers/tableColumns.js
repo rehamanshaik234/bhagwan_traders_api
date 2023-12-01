@@ -33,7 +33,6 @@ function getColumns(tableName) {
   };
 
   const StudentCols = {
-    studentId: "student_id",
     branchId: "branch_id",
     fullName: "full_name",
     mobile: "mobile",
