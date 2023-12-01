@@ -11,7 +11,7 @@ router.post("/logInfoMsg", [authenticateToken.validJWTNeeded, logInfoMsg]);
 
 router.get("/getBranchList", [getBranchList]);
 
-router.get("/getStudentsByRoute/:id", [getStudentsByRoute]);
+router.post("/getStudentsByRoute", [getStudentsByRoute]);
 router.get("/getStudent/:id", [getStudent]);
 router.post("/saveStudent", [saveStudent]);
 router.delete("/deleteStudent/:id", [deleteStudent]);
@@ -21,15 +21,16 @@ router.post("/saveDriver", [saveDriver]);
 router.delete("/deleteDriver/:id", [deleteDriver]);
 
 router.get("/getAssignedDriverRoute/:id", [getAssignedDriverRoute]);
+router.get("/getAssignedStudentRoute/:id", [getAssignedStudentRoute]);
 router.post("/getRoute", [getRoute]);
 router.get("/getAllRoutes/:branchId", [getAllRoutes]);
 router.get("/getCurrentLocation/:id", [getCurrentLocation]);
 router.get("/getAllVehicleInfo/:id", [getAllVehicleInfo]);
+router.get("/getAllDrivers/:branchId", getAllDrivers);
 router.post("/saveCurrentLocation", [saveCurrentLocation]);
 router.post("/assignDriver", [assignDriver]);
 router.put("/updateAssignedDriver", [updateAssignedDriver]);
 router.put("/updateRoute", updateRoute);
-router.post("/removeAssignedDriver", removeAssignedDriver);
 
 module.exports = router;
 
@@ -55,13 +56,15 @@ async function getBranchList(req, res) {
 
 async function getStudentsByRoute(req, res) {
   var resp = new Object();
+  var routeId = req.body.routeId;
+  var branchId = req.body.branchId;
   try {
-    let cols = tablecols.getColumns(tables.Student);
-    resp.result = await fndb.getItemByColumn(
-      tables.Student,
-      cols.routeId,
-      req.params.id
-    );
+    const sql =
+      "select * from student where branch_id = " +
+      branchId +
+      " and route_id = " +
+      routeId;
+    resp.result = await fndb.customQuery(tableNames.Student, sql);
     resp.success = true;
     resp.message = "Students by Route";
   } catch (err) {
@@ -175,6 +178,47 @@ async function deleteDriver(req, res) {
   return res.send(resp);
 }
 
+async function getAssignedStudentRoute(req, res) {
+  var resp = new Object();
+  var studentId = req.params.id;
+  try {
+    let cols = tablecols.getColumns(tables.Student);
+    let routeCols = tablecols.getColumns(tables.VehicleRoute);
+
+    var studentData = await fndb.getItemByColumn(
+      tables.Student,
+      cols.studentId,
+      studentId
+    );
+    console.log(studentData);
+    if (studentData.length > 0) {
+      var student = studentData[0];
+      var studentRoute = await fndb.getItemByColumn(
+        tables.VehicleRoute,
+        routeCols.routeId,
+        student.routeId
+      );
+      resp.result = studentRoute;
+      resp.success = true;
+      resp.message = "All data";
+    } else {
+      resp.result = [];
+      resp.success = true;
+      resp.message = "No Routes Found";
+    }
+  } catch (err) {
+    fnCommon.logErrorMsg(
+      "Common Service - getAssignedDriverRoute",
+      req,
+      err.message
+    );
+    resp.result = null;
+    resp.success = false;
+    resp.message = "Error: Error in getting information";
+  }
+  return res.send(resp);
+}
+
 async function getAssignedDriverRoute(req, res) {
   var resp = new Object();
   try {
@@ -184,7 +228,7 @@ async function getAssignedDriverRoute(req, res) {
       cols.driverId,
       parseInt(req.params.id)
     );
-    resp.result = dbresult.length > 0 ? dbresult[0] : new Object();
+    resp.result = dbresult;
     resp.success = true;
     resp.message = "All data";
   } catch (err) {
@@ -265,6 +309,33 @@ async function getAllRoutes(req, res) {
   }
   return res.send(resp);
 }
+
+async function getAllDrivers(req, res) {
+  var resp = new Object();
+  try {
+    let cols = tablecols.getColumns(tables.Driver);
+    var branchId = parseInt(req.params.branchId);
+    var dbresult = "";
+    let sql =
+      "select * from " +
+      tables.Driver +
+      " where " +
+      cols.branchId +
+      " = " +
+      branchId;
+    dbresult = await fndb.customQuery(tables.VehicleRoute, sql);
+    resp.result = dbresult;
+    resp.success = true;
+    resp.message = "All data";
+  } catch (err) {
+    fnCommon.logErrorMsg("Common Service - getRoute", req, err.message);
+    resp.result = null;
+    resp.success = false;
+    resp.message = "Error: Error in getting information";
+  }
+  return res.send(resp);
+}
+
 async function getCurrentLocation(req, res) {
   var resp = new Object();
   try {
@@ -388,10 +459,10 @@ async function getAllVehicleInfo(req, res) {
   try {
     var branchId = parseInt(req.params.id);
     var sql =
-      "SELECT vr.route_id as 'Id', vr.vehicle_id, vr.driver_id, vr.route_number, v.vehicle_id as 'VehicleId', v.vehicle_type, v.vehicle_regno, " +
-      "d.driver_id as 'DriverId', d.full_name as 'FullName', d.mobile FROM vehicle_route vr INNER JOIN vehicle v ON vr.vehicle_id = v.vehicle_id " +
-      "INNER JOIN driver d ON vr.driver_id = d.driver_id WHERE vehicle_route.branch_id =" +
-      branchId;
+      "SELECT vehicle_route.*, vehicle.*, driver.* FROM vehicle LEFT JOIN vehicle_route ON vehicle.vehicle_id = vehicle_route.vehicle_id LEFT JOIN driver ON vehicle_route.driver_id = driver.driver_id WHERE " +
+      "vehicle_route.branch_id =" +
+      branchId +
+      " OR vehicle_route.branch_id IS NULL";
 
     resp.result = await fndb.customQuery(null, sql); //If data coming rfrom multiple tables use null
     resp.success = true;
@@ -415,30 +486,20 @@ async function assignDriver(req, res) {
     let data = req.body;
     let vehicleRouteCols = tablecols.getColumns(tables.VehicleRoute);
     console.log(data);
-    const driverInfo = await fndb.getItemByColumn(
+    const routeNumber = await fndb.getItemByColumn(
       tableNames.VehicleRoute,
-      vehicleRouteCols.driverId,
-      data.driverId
+      vehicleRouteCols.routeNumber,
+      data.routeNumber
     );
-    if (driverInfo.length == 0) {
-      const routeNumber = await fndb.getItemByColumn(
-        tableNames.VehicleRoute,
-        vehicleRouteCols.routeNumber,
-        data.routeNumber
-      );
-      if (routeNumber.length == 0) {
-        resp.result = await fndb.addNewItem(tables.VehicleRoute, data);
-        resp.success = true;
-        resp.message = "Data Updated";
-      } else {
-        resp.result = {};
-        resp.success = false;
-        resp.message = "RouteNumber Already In Use";
-      }
+    if (routeNumber.length == 0) {
+      await fndb.addNewItem(tables.VehicleRoute, data);
+      resp.result = true;
+      resp.success = true;
+      resp.message = "Data Updated";
     } else {
       resp.result = {};
       resp.success = false;
-      resp.message = "Driver Already Assigned";
+      resp.message = "RouteNumber Already In Use";
     }
   } catch (err) {
     fnCommon.logErrorMsg("User Service - updateUser", req, err.message);
@@ -453,51 +514,18 @@ async function updateAssignedDriver(req, res) {
   var resp = new Object();
   try {
     let data = req.body;
-    let vehicleRouteCols = tablecols.getColumns(tables.VehicleRoute);
-    console.log(data);
-    const driverInfo = await fndb.getItemByColumn(
-      tableNames.VehicleRoute,
-      vehicleRouteCols.driverId,
-      data.driverId
-    );
-    if (driverInfo.length == 0) {
-      resp.result = await fndb.updateItem(
-        tables.VehicleRoute,
-        data.routeId,
-        data
-      );
-      resp.success = true;
-      resp.message = "Data Updated";
-    } else {
-      resp.result = {};
-      resp.success = false;
-      resp.message = "Driver Already Assigned";
-    }
-  } catch (err) {
-    fnCommon.logErrorMsg("User Service - updateUser", req, err.message);
-    resp.result = null;
-    resp.success = false;
-    resp.message = "Error: Error in Assign Driver - common service";
-  }
-  return res.send(resp);
-}
-
-async function removeAssignedDriver(req, res) {
-  var resp = new Object();
-  try {
-    let data = req.body;
     resp.result = await fndb.updateItem(
       tables.VehicleRoute,
       data.routeId,
       data
     );
     resp.success = true;
-    resp.message = "Driver Removed";
+    resp.message = "Data Updated";
   } catch (err) {
     fnCommon.logErrorMsg("User Service - updateUser", req, err.message);
     resp.result = null;
     resp.success = false;
-    resp.message = "Error: Error in update user - user service";
+    resp.message = "Error: Error in Assign Driver - common service";
   }
   return res.send(resp);
 }

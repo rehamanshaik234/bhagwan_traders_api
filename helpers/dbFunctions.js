@@ -11,6 +11,7 @@ module.exports = {
   updateItem,
   deleteItem,
   customQuery,
+  deleteItemByColumn,
 };
 
 async function transformColumns(tableName, result) {
@@ -174,6 +175,19 @@ async function deleteItem(tableName, dataId) {
     const keyCol = tablecols.getKeyColumn(tableName);
     const queryText =
       "DELETE FROM " + tableName + " WHERE " + keyCol + " = " + dataId;
+    const result = await sqlTransaction(queryText, "");
+    return result;
+  } catch (err) {
+    fnCommon.logErrorMsg("dbFunctions - deleteItem", null, err.message);
+    return null;
+  }
+}
+
+async function deleteItemByColumn(tableName, colName, value) {
+  try {
+    const keyCol = tablecols.getKeyColumn(tableName);
+    const queryText =
+      "DELETE FROM " + tableName + " WHERE " + colName + " = " + value;
     const result = await sqlTransaction(queryText, "");
     return result;
   } catch (err) {
