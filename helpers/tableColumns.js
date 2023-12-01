@@ -38,6 +38,7 @@ function getColumns(tableName) {
     mobile: "mobile",
     address: "address",
     routeId: "route_id",
+    transportType: "transport_type"
   };
 
   const VehicleCols = {
