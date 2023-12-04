@@ -9,28 +9,74 @@ const tableNames = require("../helpers/tableNames.js");
 
 router.post("/logInfoMsg", [authenticateToken.validJWTNeeded, logInfoMsg]);
 
-router.get("/getBranchList", [getBranchList]);
+router.get("/getBranchList", [authenticateToken.validJWTNeeded, getBranchList]);
+router.get("/getBranch/:id", [authenticateToken.validJWTNeeded, getBranch]);
+router.post("/saveBranch", [authenticateToken.validJWTNeeded, saveBranch]);
+router.delete("/deleteBranch/:id", [
+  authenticateToken.validJWTNeeded,
+  deleteBranch,
+]);
 
-router.post("/getStudentsByRoute", [getStudentsByRoute]);
-router.get("/getStudent/:id", [getStudent]);
-router.post("/saveStudent", [saveStudent]);
-router.delete("/deleteStudent/:id", [deleteStudent]);
+router.post("/getStudentsByRoute", [
+  authenticateToken.validJWTNeeded,
+  getStudentsByRoute,
+]);
+router.get("/getStudent/:id", [authenticateToken.validJWTNeeded, getStudent]);
+router.post("/saveStudent", [authenticateToken.validJWTNeeded, saveStudent]);
+router.delete("/deleteStudent/:id", [
+  authenticateToken.validJWTNeeded,
+  deleteStudent,
+]);
 
-router.get("/getDriver/:id", [getDriver]);
-router.post("/saveDriver", [saveDriver]);
-router.delete("/deleteDriver/:id", [deleteDriver]);
+router.get("/getDriver/:id", [authenticateToken.validJWTNeeded, getDriver]);
+router.post("/saveDriver", [authenticateToken.validJWTNeeded, saveDriver]);
+router.delete("/deleteDriver/:id", [
+  authenticateToken.validJWTNeeded,
+  deleteDriver,
+]);
 
-router.get("/getAssignedDriverRoute/:id", [getAssignedDriverRoute]);
-router.get("/getAssignedStudentRoute/:id", [getAssignedStudentRoute]);
-router.post("/getRoute", [getRoute]);
-router.get("/getAllRoutes/:branchId", [getAllRoutes]);
-router.get("/getCurrentLocation/:id", [getCurrentLocation]);
-router.get("/getAllVehicleInfo/:id", [getAllVehicleInfo]);
-router.get("/getAllDrivers/:branchId", getAllDrivers);
-router.post("/saveCurrentLocation", [saveCurrentLocation]);
-router.post("/assignDriver", [assignDriver]);
-router.put("/updateAssignedDriver", [updateAssignedDriver]);
-router.put("/updateRoute", updateRoute);
+router.get("/getVehicle/:id", [authenticateToken.validJWTNeeded, getVehicle]);
+router.post("/saveVehicle", [authenticateToken.validJWTNeeded, saveVehicle]);
+router.delete("/deleteVehicle/:id", [
+  authenticateToken.validJWTNeeded,
+  deleteVehicle,
+]);
+
+router.get("/getAssignedDriverRoute/:id", [
+  authenticateToken.validJWTNeeded,
+  getAssignedDriverRoute,
+]);
+router.get("/getAssignedStudentRoute/:id", [
+  authenticateToken.validJWTNeeded,
+  getAssignedStudentRoute,
+]);
+router.post("/getRoute", [authenticateToken.validJWTNeeded, getRoute]);
+router.get("/getAllRoutes/:branchId", [
+  authenticateToken.validJWTNeeded,
+  getAllRoutes,
+]);
+router.get("/getCurrentLocation/:id", [
+  authenticateToken.validJWTNeeded,
+  getCurrentLocation,
+]);
+router.get("/getAllVehicleInfo/:id", [
+  authenticateToken.validJWTNeeded,
+  getAllVehicleInfo,
+]);
+router.get("/getAllDrivers/:branchId", [
+  authenticateToken.validJWTNeeded,
+  getAllDrivers,
+]);
+router.post("/saveCurrentLocation", [
+  authenticateToken.validJWTNeeded,
+  saveCurrentLocation,
+]);
+router.post("/assignDriver", [authenticateToken.validJWTNeeded, assignDriver]);
+router.put("/updateAssignedDriver", [
+  authenticateToken.validJWTNeeded,
+  updateAssignedDriver,
+]);
+router.put("/updateRoute", [authenticateToken.validJWTNeeded, updateRoute]);
 
 module.exports = router;
 
@@ -47,6 +93,56 @@ async function getBranchList(req, res) {
     resp.message = "All Branch List";
   } catch (err) {
     fnCommon.logErrorMsg("Common Service - getBranchList", req, err.message);
+    resp.result = null;
+    resp.success = false;
+    resp.message = "Error: Error in getting information";
+  }
+  return res.send(resp);
+}
+
+async function getBranch(req, res) {
+  var resp = new Object();
+  try {
+    resp.result = await fndb.getItemById(tables.Branch, req.params.id);
+    resp.success = true;
+    resp.message = "Branch data";
+  } catch (err) {
+    fnCommon.logErrorMsg("Common Service - getBranch", req, err.message);
+    resp.result = null;
+    resp.success = false;
+    resp.message = "Error: Error in getting information";
+  }
+  return res.send(resp);
+}
+
+async function saveBranch(req, res) {
+  var resp = new Object();
+  try {
+    if (req.body.id) {
+      dbresult = await fndb.updateItem(tables.Branch, req.body.id, req.body);
+    } else {
+      dbresult = await fndb.addNewItem(tables.Branch, req.body);
+    }
+    resp.result = null;
+    resp.success = true;
+    resp.message = "Saved data";
+  } catch (err) {
+    fnCommon.logErrorMsg("Common Service - saveBranch", req, err.message);
+    resp.result = null;
+    resp.success = false;
+    resp.message = "Error: Error in getting information";
+  }
+  return res.send(resp);
+}
+
+async function deleteBranch(req, res) {
+  var resp = new Object();
+  try {
+    resp.result = await fndb.deleteItem(tables.Branch, req.params.id);
+    resp.success = true;
+    resp.message = "All data";
+  } catch (err) {
+    fnCommon.logErrorMsg("Common Service - deleteBranch", req, err.message);
     resp.result = null;
     resp.success = false;
     resp.message = "Error: Error in getting information";
@@ -98,11 +194,14 @@ async function getStudent(req, res) {
 async function saveStudent(req, res) {
   var resp = new Object();
   try {
-    if (req.body.Id) {
-      dbresult = await fndb.updateItem(tables.Student, req.body.Id, req.body);
+    if (req.body.id) {
+      dbresult = await fndb.updateItem(tables.Student, req.body.id, req.body);
     } else {
       dbresult = await fndb.addNewItem(tables.Student, req.body);
     }
+    resp.result = null;
+    resp.success = true;
+    resp.message = "Saved data";
   } catch (err) {
     fnCommon.logErrorMsg("Common Service - saveStudent", req, err.message);
     resp.result = null;
@@ -149,11 +248,14 @@ async function getDriver(req, res) {
 async function saveDriver(req, res) {
   var resp = new Object();
   try {
-    if (req.body.Id) {
+    if (req.body.id) {
       dbresult = await fndb.updateItem(tables.Driver, req.body.Id, req.body);
     } else {
       dbresult = await fndb.addNewItem(tables.Driver, req.body);
     }
+    resp.result = null;
+    resp.success = true;
+    resp.message = "Error: Error in getting information";
   } catch (err) {
     fnCommon.logErrorMsg("Common Service - saveDriver", req, err.message);
     resp.result = null;
@@ -178,26 +280,67 @@ async function deleteDriver(req, res) {
   return res.send(resp);
 }
 
+async function getVehicle(req, res) {
+  var resp = new Object();
+  try {
+    resp.result = await fndb.getItemById(tables.Vehicle, req.params.id);
+    resp.success = true;
+    resp.message = "Vehicles List";
+  } catch (err) {
+    fnCommon.logErrorMsg("Common Service - getVehicle", req, err.message);
+    resp.result = null;
+    resp.success = false;
+    resp.message = "Error: Error in getting information";
+  }
+  return res.send(resp);
+}
+
+async function saveVehicle(req, res) {
+  var resp = new Object();
+  try {
+    if (req.body.id) {
+      dbresult = await fndb.updateItem(tables.Vehicle, req.body.Id, req.body);
+    } else {
+      dbresult = await fndb.addNewItem(tables.Vehicle, req.body);
+    }
+    resp.result = null;
+    resp.success = true;
+    resp.message = "Error: Error in getting information";
+  } catch (err) {
+    fnCommon.logErrorMsg("Common Service - saveVehicle", req, err.message);
+    resp.result = null;
+    resp.success = false;
+    resp.message = "Error: Error in getting information";
+  }
+  return res.send(resp);
+}
+
+async function deleteVehicle(req, res) {
+  var resp = new Object();
+  try {
+    resp.result = await fndb.deleteItem(tables.Vehicle, req.params.id);
+    resp.success = true;
+    resp.message = "All data";
+  } catch (err) {
+    fnCommon.logErrorMsg("Common Service - deleteVehicler", req, err.message);
+    resp.result = null;
+    resp.success = false;
+    resp.message = "Error: Error in getting information";
+  }
+  return res.send(resp);
+}
+
 async function getAssignedStudentRoute(req, res) {
   var resp = new Object();
-  var studentId = req.params.id;
   try {
-    let cols = tablecols.getColumns(tables.Student);
     let routeCols = tablecols.getColumns(tables.VehicleRoute);
-
-    var studentData = await fndb.getItemByColumn(
-      tables.Student,
-      cols.studentId,
-      studentId
+    var student = await fndb.getItemById(tables.Student, req.params.id);
+    var studentRoute = await fndb.getItemByColumn(
+      tables.VehicleRoute,
+      routeCols.routeId,
+      student.routeId
     );
-    console.log(studentData);
-    if (studentData.length > 0) {
-      var student = studentData[0];
-      var studentRoute = await fndb.getItemByColumn(
-        tables.VehicleRoute,
-        routeCols.routeId,
-        student.routeId
-      );
+    if (studentRoute.length > 0) {
       resp.result = studentRoute;
       resp.success = true;
       resp.message = "All data";

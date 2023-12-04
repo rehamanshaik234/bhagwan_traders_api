@@ -10,13 +10,13 @@ app.use(
 
 app.use(cors());
 
-app.get("/gpsapi/", (req, res) => {
+app.get("/vctrackingapi/", (req, res) => {
   res.json({ message: "GPS Tracking API Service" });
 });
 
 // api routes
-app.use("/gpsapi/common", require("./services/commonservice"));
-app.use("/gpsapi/user", require("./services/userservice"));
+app.use("/vctrackingapi/common", require("./services/commonservice"));
+app.use("/vctrackingapi/user", require("./services/userservice"));
 
 var server = http.createServer(app);
 

@@ -33,12 +33,12 @@ function getColumns(tableName) {
   };
 
   const StudentCols = {
-    studentId: "student_id",
     branchId: "branch_id",
     fullName: "full_name",
     mobile: "mobile",
     address: "address",
     routeId: "route_id",
+    transportType: "transport_type"
   };
 
   const VehicleCols = {
