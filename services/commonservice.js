@@ -131,9 +131,9 @@ async function getDriver(req, res) {
   var resp = new Object();
   try {
     if (req.params.id > 0) {
-      resp.result = await fndb.getItemById(tables.Student, req.params.id);
+      resp.result = await fndb.getItemById(tables.Driver, req.params.id);
     } else {
-      resp.result = await fndb.getAllItems(tables.Student);
+      resp.result = await fndb.getAllItems(tables.Driver);
     }
     resp.success = true;
     resp.message = "Students by Route";
@@ -479,7 +479,6 @@ async function getAllVehicleInfo(req, res) {
   }
   return res.send(resp);
 }
-
 async function assignDriver(req, res) {
   var resp = new Object();
   try {
