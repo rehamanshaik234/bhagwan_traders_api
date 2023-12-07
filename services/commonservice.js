@@ -21,22 +21,25 @@ router.post("/getStudentsByRoute", [
   authenticateToken.validJWTNeeded,
   getStudentsByRoute,
 ]);
+
+router.get("/getStudents/:id", getStudents);
 router.get("/getStudent/:id", [authenticateToken.validJWTNeeded, getStudent]);
 router.post("/saveStudent", [authenticateToken.validJWTNeeded, saveStudent]);
 router.delete("/deleteStudent/:id", [
   authenticateToken.validJWTNeeded,
   deleteStudent,
 ]);
-
+router.get("/getDrivers/:id", [authenticateToken.validJWTNeeded, getDrivers]);
 router.get("/getDriver/:id", [authenticateToken.validJWTNeeded, getDriver]);
-router.post("/saveDriver", [authenticateToken.validJWTNeeded, saveDriver]);
+router.post("/saveDriver", saveDriver);
 router.delete("/deleteDriver/:id", [
   authenticateToken.validJWTNeeded,
   deleteDriver,
 ]);
 
 router.get("/getVehicle/:id", [authenticateToken.validJWTNeeded, getVehicle]);
-router.post("/saveVehicle", [authenticateToken.validJWTNeeded, saveVehicle]);
+router.get("/getVehicles/:id", [authenticateToken.validJWTNeeded, getVehicles]);
+router.post("/saveVehicle", saveVehicle);
 router.delete("/deleteVehicle/:id", [
   authenticateToken.validJWTNeeded,
   deleteVehicle,
@@ -194,17 +197,21 @@ async function getStudent(req, res) {
 async function saveStudent(req, res) {
   var resp = new Object();
   try {
-    if (req.body.id) {
-      dbresult = await fndb.updateItem(tables.Student, req.body.id, req.body);
+    if (req.body.studentId) {
+      resp.result = await fndb.updateItem(
+        tables.Student,
+        req.body.studentId,
+        req.body
+      );
     } else {
       dbresult = await fndb.addNewItem(tables.Student, req.body);
+      resp.result = true;
     }
-    resp.result = null;
     resp.success = true;
     resp.message = "Saved data";
   } catch (err) {
     fnCommon.logErrorMsg("Common Service - saveStudent", req, err.message);
-    resp.result = null;
+    resp.result = false;
     resp.success = false;
     resp.message = "Error: Error in getting information";
   }
@@ -248,17 +255,21 @@ async function getDriver(req, res) {
 async function saveDriver(req, res) {
   var resp = new Object();
   try {
-    if (req.body.id) {
-      dbresult = await fndb.updateItem(tables.Driver, req.body.Id, req.body);
+    if (req.body.driverId) {
+      resp.result = await fndb.updateItem(
+        tables.Driver,
+        req.body.driverId,
+        req.body
+      );
     } else {
       dbresult = await fndb.addNewItem(tables.Driver, req.body);
+      resp.result = true;
     }
-    resp.result = null;
     resp.success = true;
     resp.message = "Error: Error in getting information";
   } catch (err) {
     fnCommon.logErrorMsg("Common Service - saveDriver", req, err.message);
-    resp.result = null;
+    resp.result = false;
     resp.success = false;
     resp.message = "Error: Error in getting information";
   }
@@ -295,17 +306,81 @@ async function getVehicle(req, res) {
   return res.send(resp);
 }
 
+async function getVehicles(req, res) {
+  var resp = new Object();
+  let cols = tablecols.getColumns(tables.Vehicle);
+  try {
+    resp.result = await fndb.getItemByColumn(
+      tables.Vehicle,
+      cols.branchId,
+      req.params.id
+    );
+    resp.success = true;
+    resp.message = "Vehicles List";
+  } catch (err) {
+    fnCommon.logErrorMsg("Common Service - getVehicle", req, err.message);
+    resp.result = null;
+    resp.success = false;
+    resp.message = "Error: Error in getting information";
+  }
+  return res.send(resp);
+}
+
+async function getDrivers(req, res) {
+  var resp = new Object();
+  let cols = tablecols.getColumns(tables.Driver);
+  try {
+    resp.result = await fndb.getItemByColumn(
+      tables.Driver,
+      cols.branchId,
+      req.params.id
+    );
+    resp.success = true;
+    resp.message = "Drivers List";
+  } catch (err) {
+    fnCommon.logErrorMsg("Common Service - getDrivers", req, err.message);
+    resp.result = null;
+    resp.success = false;
+    resp.message = "Error: Error in getting information";
+  }
+  return res.send(resp);
+}
+
+async function getStudents(req, res) {
+  var resp = new Object();
+  let cols = tablecols.getColumns(tables.Student);
+  try {
+    resp.result = await fndb.getItemByColumn(
+      tables.Student,
+      cols.branchId,
+      req.params.id
+    );
+    resp.success = true;
+    resp.message = "Students List";
+  } catch (err) {
+    fnCommon.logErrorMsg("Common Service - getStudents", req, err.message);
+    resp.result = null;
+    resp.success = false;
+    resp.message = "Error: Error in getting information";
+  }
+  return res.send(resp);
+}
+
 async function saveVehicle(req, res) {
   var resp = new Object();
   try {
-    if (req.body.id) {
-      dbresult = await fndb.updateItem(tables.Vehicle, req.body.Id, req.body);
+    if (req.body.vehicleId) {
+      resp.result = await fndb.updateItem(
+        tables.Vehicle,
+        req.body.vehicleId,
+        req.body
+      );
     } else {
       dbresult = await fndb.addNewItem(tables.Vehicle, req.body);
+      resp.result = true;
     }
-    resp.result = null;
     resp.success = true;
-    resp.message = "Error: Error in getting information";
+    resp.message = "Data Added";
   } catch (err) {
     fnCommon.logErrorMsg("Common Service - saveVehicle", req, err.message);
     resp.result = null;
@@ -602,10 +677,19 @@ async function getAllVehicleInfo(req, res) {
   try {
     var branchId = parseInt(req.params.id);
     var sql =
-      "SELECT vehicle_route.*, vehicle.*, driver.* FROM vehicle LEFT JOIN vehicle_route ON vehicle.vehicle_id = vehicle_route.vehicle_id LEFT JOIN driver ON vehicle_route.driver_id = driver.driver_id WHERE " +
-      "vehicle_route.branch_id =" +
-      branchId +
-      " OR vehicle_route.branch_id IS NULL";
+      "SELECT" +
+      " vehicle_route.*," +
+      " vehicle.*," +
+      " driver.*" +
+      " FROM" +
+      " vehicle_route" +
+      " INNER JOIN" +
+      " vehicle ON vehicle_route.vehicle_id = vehicle.vehicle_id" +
+      " INNER JOIN" +
+      " driver ON vehicle_route.driver_id = driver.driver_id" +
+      " WHERE" +
+      " vehicle_route.branch_id =" +
+      branchId;
 
     resp.result = await fndb.customQuery(null, sql); //If data coming rfrom multiple tables use null
     resp.success = true;
