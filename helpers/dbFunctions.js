@@ -10,7 +10,7 @@ module.exports = {
   addNewItem,
   updateItem,
   deleteItem,
-  customQuery
+  customQuery,
 };
 
 async function transformColumns(tableName, result) {
