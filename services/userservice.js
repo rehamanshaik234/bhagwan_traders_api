@@ -94,6 +94,7 @@ async function authenticate(req, res) {
         const token = jwt.sign({ sub: usr.id }, apiConfig.jwtSecret);
         await updateLastLogin(usr.id);
         usr.token = token;
+        usr.custid = 1;
         resp.result = usr;
         resp.success = true;
         resp.message = "user authenticated";
