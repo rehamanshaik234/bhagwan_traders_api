@@ -2,6 +2,7 @@ const http = require("http");
 const express = require("express");
 const app = express();
 const cors = require("cors");
+const { connection, pool } = require("./helpers/mySQLConnector");
 
 app.use(express.json({ limit: "50mb" }));
 app.use(
@@ -10,18 +11,18 @@ app.use(
 
 app.use(cors());
 
-app.get("/vctrackingapi/", (req, res) => {
-  res.json({ message: "GPS Tracking API Service" });
+app.get("/bhagwantradersapi/", (req, res) => {
+  return res.json({ message: "GPS Tracking API Service" });
 });
 
 // api routes
-app.use("/vctrackingapi/common", require("./services/commonservice"));
-app.use("/vctrackingapi/user", require("./services/userservice"));
+app.use("/bhagwantradersapi/common", require("./services/commonservice"));
+app.use("/bhagwantradersapi/user", require("./services/userservice"));
 
 var server = http.createServer(app);
 
 // prod
 //server.listen();
-server.listen(3000, () => {
-  console.log('Listening on port 3000');
+server.listen(3000, async () => {
+  console.log("Listening on port 3000");
 });

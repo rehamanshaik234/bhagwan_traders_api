@@ -1,0 +1,11 @@
+2023-11-30T06:44:20.918Z : Error in function dbFunctions - sqlTransaction. Error message- "Unknown column 'undefined' in 'where clause'"
+2023-11-30T06:44:20.918Z : Error in function dbFunctions - getItemByColumn. Error message- "Unknown column 'undefined' in 'where clause'"
+2023-11-30T06:53:01.388Z : Request Params- {}
+2023-11-30T06:53:01.388Z : Request Payload- {"studentId":4,"branchId":1}
+2023-11-30T06:53:01.388Z : Error in function Common Service - getAssignedDriverRoute. Error message- "studentData[0] is not a function"
+2023-11-30T06:53:49.683Z : Request Params- {}
+2023-11-30T06:53:49.683Z : Request Payload- {"studentId":4,"branchId":1}
+2023-11-30T06:53:49.684Z : Error in function Common Service - getAssignedDriverRoute. Error message- "studentData[0] is not a function"
+2023-11-30T06:54:06.004Z : Request Params- {}
+2023-11-30T06:54:06.004Z : Request Payload- {"studentId":4,"branchId":1}
+2023-11-30T06:54:06.004Z : Error in function Common Service - getAssignedDriverRoute. Error message- "studentData is not a function"

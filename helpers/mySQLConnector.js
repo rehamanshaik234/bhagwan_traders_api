@@ -1,18 +1,19 @@
 const mysql = require("mysql2");
 const config = require("../config/config.json");
+require("dotenv").config();
 
 let dbConfig = {
-  host: config.dbHost,
-  user: config.dbUser,
-  password: config.dbPassword,
-  database: config.dataBaseName,
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
   waitForConnections: true,
   connectionLimit: 10,
   maxIdle: 10,
   idleTimeout: 60000,
   queueLimit: 0,
   enableKeepAlive: true,
-  keepAliveInitialDelay: 0
+  keepAliveInitialDelay: 0,
 };
 
 const pool = mysql.createPool(dbConfig);
@@ -21,10 +22,10 @@ const connection = () => {
     pool.getConnection((err, connection) => {
       if (err) reject(err);
       if (typeof connection === "undefined") {
-        // console.log("MySQL Server connection error");
+        console.log("MySQL Server connection error");
         return err;
       }
-      // console.log("MySQL pool connected: threadId " + connection.threadId);
+      console.log("MySQL pool connected: threadId " + connection.threadId);
       const query = (sql, binding) => {
         return new Promise((resolve, reject) => {
           connection.query(sql, binding, (err, result) => {
@@ -36,7 +37,7 @@ const connection = () => {
       const release = () => {
         return new Promise((resolve, reject) => {
           if (err) reject(err);
-          // console.log("MySQL pool released: threadId " + connection.threadId);
+          console.log("MySQL pool released: threadId " + connection.threadId);
           resolve(connection.release());
         });
       };

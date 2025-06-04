@@ -5,94 +5,151 @@ module.exports = {
 };
 
 function getColumns(tableName) {
-  const AppUserCols = {
-    branchId: "branch_id",
-    userRoleId: "user_role_id",
-    userName: "user_name",
-    userPassword: "user_password",
-    refId: "ref_id",
-    mobile: "mobile_no",
-    mobileOTP: "mobile_otp",
-    lastLogin: "last_login",
+  const UserCols = {
+    id: "id",
+    name: "name",
+    email: "email",
+    password: "password_hash",
+    role: "role",
+    createdAt: "created_at",
+  };
+
+  const AddressCols = {
+    id: "id",
+    customerId: "customer_id",
+    addressLine: "address_line",
+    city: "city",
+    state: "state",
+    postalCode: "postal_code",
+    longitude: "longitudes",
+    latitude: "latitudes",
+    country: "country",
+  };
+
+  const BrandCols = {
+    id: "id",
+    name: "name",
+    description: "description",
+    imageUrl: "image_url",
     isActive: "is_active",
+    createdAt: "created_at",
   };
 
-  const BranchCols = {
-    branchId: "branch_id",
-    branchName: "branch_name",
-    contactNumber: "contact_number",
+  const CartCols = {
+    id: "id",
+    customerId: "customer_id",
+    createdAt: "created_at",
   };
 
-  const DriverCols = {
-    driverId: "driver_id",
-    branchId: "branch_id",
-    fullName: "full_name",
-    address: "address",
-    mobile: "mobile",
-    drivingLicense: "driving_license",
+  const CartItemCols = {
+    id: "id",
+    cartId: "cart_id",
+    productId: "product_id",
+    quantity: "quantity",
   };
 
-  const StudentCols = {
-    branchId: "branch_id",
-    fullName: "full_name",
-    mobile: "mobile",
-    address: "address",
-    routeId: "route_id",
-    transportType: "transport_type"
+  const CategoryCols = {
+    id: "id",
+    name: "name",
+    imageUrl: "image_url",
+    description: "description",
   };
 
-  const VehicleCols = {
-    vehicleId: "vehicle_id",
-    branchId: "branch_id",
-    vehicleType: "vehicle_type",
-    vehicleModel: "vehicle_model",
-    vehicleRegNo: "vehicle_regno",
-    seatCapacity: "seat_capacity",
-    otherDetails: "other_det",
+  const CustomerCols = {
+    id: "id",
+    name: "name",
+    email: "email",
+    password: "password",
+    number: "number",
+    createdAt: "created_at",
   };
 
-  const VehicleRouteCols = {
-    routeId: "route_id",
-    branchId: "branch_id",
-    vehicleId: "vehicle_id",
-    driverId: "driver_id",
-    routeNumber: "route_number",
-    currentLatitude: "current_latitude",
-    currentLongitude: "current_longitude",
-    lastUpdateTime: "last_update_time",
-    isOnline: "is_online",
+  const OrderCols = {
+    id: "id",
+    customerId: "customer_id",
+    shippingAddress: "shipping_address",
+    totalAmount: "total_amount",
+    status: "status",
+    createdAt: "created_at",
+  };
+
+  const OrderItemCols = {
+    id: "id",
+    orderId: "order_id",
+    productId: "product_id",
+    quantity: "quantity",
+    price: "price",
+  };
+
+  const ProductCols = {
+    id: "id",
+    name: "name",
+    description: "description",
+    imageUrl: "image_url",
+    brandId: "brand_id",
+    categoryId: "category_id",
+    price: "price",
+    stock: "stock",
     isActive: "is_active",
+    createdAt: "created_at",
+  };
+
+  const ProductVariantCols = {
+    id: "id",
+    productId: "product_id",
+    variantName: "variant_name",
+    additionalPrice: "additional_price",
   };
 
   switch (tableName) {
-    case tableNames.Users:
-      return AppUserCols;
+    case tableNames.users:
+      return UserCols;
 
-    case tableNames.Branch:
-      return BranchCols;
+    case tableNames.addresses:
+      return AddressCols;
 
-    case tableNames.Driver:
-      return DriverCols;
+    case tableNames.brands:
+      return BrandCols;
 
-    case tableNames.Student:
-      return StudentCols;
+    case tableNames.carts:
+      return CartCols;
 
-    case tableNames.Vehicle:
-      return VehicleCols;
+    case tableNames.cartItems:
+      return CartItemCols;
 
-    case tableNames.VehicleRoute:
-      return VehicleRouteCols;
+    case tableNames.categories:
+      return CategoryCols;
+
+    case tableNames.customers:
+      return CustomerCols;
+
+    case tableNames.orders:
+      return OrderCols;
+
+    case tableNames.orderItems:
+      return OrderItemCols;
+
+    case tableNames.products:
+      return ProductCols;
+
+    case tableNames.productVariants:
+      return ProductVariantCols;
 
     case "":
     default:
       return Object.assign(
         {},
-        AppUserCols,
-        BranchCols,
-        DriverCols,
-        StudentCols,
-        VehicleCols,
-        VehicleRouteCols
+        UserCols,
+        AddressCols,
+        BrandCols,
+        CartCols,
+        CartItemCols,
+        CategoryCols,
+        CustomerCols,
+        OrderCols,
+        OrderItemCols,
+        ProductCols,
+        ProductVariantCols
       );
   }
 }
