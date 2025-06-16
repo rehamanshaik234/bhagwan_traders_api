@@ -24,5 +24,6 @@ var server = http.createServer(app);
 // prod
 //server.listen();
 server.listen(3000, async () => {
+  console.log(await connection());
   console.log("Listening on port 3000");
 });
