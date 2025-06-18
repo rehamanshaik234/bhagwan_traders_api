@@ -16,6 +16,8 @@ let dbConfig = {
   keepAliveInitialDelay: 0,
 };
 
+console.log(dbConfig);
+
 const pool = mysql.createPool(dbConfig);
 const connection = () => {
   return new Promise((resolve, reject) => {

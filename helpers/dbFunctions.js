@@ -2,6 +2,7 @@ const tables = require("./tableNames.js");
 const tablecols = require("./tableColumns.js");
 const fnCommon = require("./commonFunctions");
 const mysql = require("./mySQLConnector.js");
+const e = require("express");
 
 module.exports = {
   getItemById,
@@ -11,27 +12,25 @@ module.exports = {
   updateItem,
   deleteItem,
   customQuery,
+  addOrUpdateItem,
 };
 
 async function transformColumns(tableName, result) {
-  const keyCol = tablecols.getKeyColumn(tableName);
   const cols = tablecols.getColumns(tableName);
   var colKeys = Object.keys(cols);
   var colVals = Object.values(cols);
   var newResult = [];
-  for (i = 0; i < result.length; i++) {
-    var row = JSON.stringify(result[i]);
+
+  for (let i = 0; i < result.length; i++) {
+    const row = JSON.stringify(result[i]);
     var item = {};
+
     JSON.parse(row, function (k, v) {
-      if (k === keyCol) {
-        item["id"] = v;
-      } else {
-        let idx = colVals.indexOf(k);
-        if (idx >= 0) {
-          item[colKeys[idx]] = v;
-        } else if (k.length > 0) {
-          item[k] = v;
-        }
+      let idx = colVals.indexOf(k);
+      if (idx >= 0) {
+        item[colKeys[idx]] = v;
+      } else if (k.length > 0) {
+        item[k] = v;
       }
     });
 
@@ -39,6 +38,7 @@ async function transformColumns(tableName, result) {
       newResult.push(item);
     }
   }
+
   return newResult;
 }
 
@@ -125,7 +125,7 @@ async function addNewItem(tableName, data) {
       null,
       tableName + " - " + JSON.stringify(data)
     );
-    fnCommon.logErrorMsg("dbFunctions - addNewItem", null, err.message);
+    fnCommon.logErrorMsg("dbFunctions - addNewItem", null, err.sqlMessage);
     return null;
   }
 }
@@ -165,6 +165,47 @@ async function updateItem(tableName, dataId, data) {
     return result.affectedRows > 0 ? true : false;
   } catch (err) {
     fnCommon.logErrorMsg("dbFunctions - updateItem", null, err.message);
+    return null;
+  }
+}
+
+async function addOrUpdateItem(tableName, dataId, data) {
+  try {
+    const keyCol = tablecols.getKeyColumn(tableName);
+
+    // 1. Check if item exists
+    const checkQuery = `SELECT COUNT(*) as count FROM ${tableName} WHERE ${keyCol} = ?`;
+    const checkResult = await sqlTransaction(checkQuery, [dataId]);
+    if (checkResult[0].count > 0) {
+      // 2. Exists → Update
+      return await updateItem(tableName, dataId, data);
+    } else {
+      // 3. Doesn't exist → Insert
+      const cols = tablecols.getColumns(tableName);
+      const colKeys = Object.keys(cols);
+      const colVals = Object.values(cols);
+
+      let insertCols = [];
+      let insertVals = [];
+      let placeholders = [];
+
+      for (let i = 0; i < colKeys.length; i++) {
+        let k = colKeys[i];
+        if (data[k] != null) {
+          insertCols.push(colVals[i]);
+          insertVals.push(data[k]);
+          placeholders.push("?");
+        }
+      }
+
+      const insertQuery = `INSERT INTO ${tableName} (${insertCols.join(
+        ", "
+      )}) VALUES (${placeholders.join(", ")})`;
+      const result = await sqlTransaction(insertQuery, insertVals);
+      return result.affectedRows > 0 ? true : false;
+    }
+  } catch (err) {
+    fnCommon.logErrorMsg("dbFunctions - addOrUpdateItem", null, err.message);
     return null;
   }
 }

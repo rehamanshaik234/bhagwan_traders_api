@@ -21,6 +21,7 @@
     "https": "^1.0.0",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.6.2",
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "twilio": "^5.7.0"
   }
 }

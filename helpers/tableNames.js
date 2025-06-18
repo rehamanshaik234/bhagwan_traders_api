@@ -10,4 +10,5 @@ module.exports = {
   orderItems: "order_items",
   products: "products",
   productVariants: "product_variants",
+  numberOtps: "number_otps",
 };

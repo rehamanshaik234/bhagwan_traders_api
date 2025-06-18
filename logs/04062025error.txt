@@ -1,0 +1,2 @@
+2025-06-04T15:33:21.253Z : Error in function dbFunctions - sqlTransaction. Error message- "Unknown column 'id' in 'where clause'"
+2025-06-04T15:33:21.254Z : Error in function dbFunctions - addOrUpdateItem. Error message- "Unknown column 'id' in 'where clause'"

@@ -10,17 +10,17 @@ module.exports = {
   GetMonthName,
   logInfoMsg,
   // logDebugMsg,
-  randomText
+  randomText,
 };
 
 function getOtpNumber() {
-  const num = [];
-  const dt = new Date();
-  num.push(dt.getMinutes());
-  num.push(dt.getSeconds());
-  num.push(Math.floor(Math.random() * 100 + 1));
+  const minutes = new Date().getMinutes().toString().padStart(2, "0");
+  const seconds = new Date().getSeconds().toString().padStart(2, "0");
+  const random = Math.floor(Math.random() * 100)
+    .toString()
+    .padStart(2, "0");
 
-  return num.toString().replace(/,/g, "");
+  return minutes + seconds + random; // Always 6 digits
 }
 
 function getCacheKey(tableName) {
@@ -32,7 +32,7 @@ function GetUserRoleId(roleName) {
     case "Administrator":
       return 1;
     case "BranchHead":
-        return 2;
+      return 2;
     case "Driver":
       return 3;
     case "Student":
@@ -115,7 +115,7 @@ function GetMonthName(monthNo) {
     case 12:
       return "December";
     default:
-      return '';
+      return "";
   }
 }
 
@@ -126,8 +126,13 @@ async function logErrorMsg(fn, req, err) {
   if (req && req.body) {
     logger.Error("Request Payload- " + JSON.stringify(req.body));
   }
-  
-  logger.Error("Error in function " + fn + ". Error message- " + JSON.stringify(err, null, 2));
+
+  logger.Error(
+    "Error in function " +
+      fn +
+      ". Error message- " +
+      JSON.stringify(err, null, 2)
+  );
 }
 
 async function logInfoMsg(msg) {
@@ -139,8 +144,9 @@ async function logInfoMsg(msg) {
 // }
 
 function randomText(length) {
-  let result = '';
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = "";
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   const charactersLength = characters.length;
   let counter = 0;
   while (counter < length) {

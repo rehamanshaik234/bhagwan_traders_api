@@ -1,106 +1,107 @@
 const tableNames = require("./tableNames.js");
-module.exports = {
-  getColumns,
-  getKeyColumn,
+
+const UserCols = {
+  id: "id",
+  name: "name",
+  email: "email",
+  password: "password_hash",
+  role: "role",
+  createdAt: "created_at",
+};
+
+const AddressCols = {
+  id: "id",
+  customerId: "customer_id",
+  addressLine: "address_line",
+  city: "city",
+  state: "state",
+  postalCode: "postal_code",
+  longitude: "longitudes",
+  latitude: "latitudes",
+  country: "country",
+};
+
+const BrandCols = {
+  id: "id",
+  name: "name",
+  description: "description",
+  imageUrl: "image_url",
+  isActive: "is_active",
+  createdAt: "created_at",
+};
+
+const CartCols = {
+  id: "id",
+  customerId: "customer_id",
+  createdAt: "created_at",
+};
+
+const CartItemCols = {
+  id: "id",
+  cartId: "cart_id",
+  productId: "product_id",
+  quantity: "quantity",
+};
+
+const CategoryCols = {
+  id: "id",
+  name: "name",
+  imageUrl: "image_url",
+  description: "description",
+};
+
+const CustomerCols = {
+  id: "id",
+  name: "name",
+  email: "email",
+  password: "password",
+  number: "number",
+  createdAt: "created_at",
+};
+
+const OrderCols = {
+  id: "id",
+  customerId: "customer_id",
+  shippingAddress: "shipping_address",
+  totalAmount: "total_amount",
+  status: "status",
+  createdAt: "created_at",
+};
+
+const OrderItemCols = {
+  id: "id",
+  orderId: "order_id",
+  productId: "product_id",
+  quantity: "quantity",
+  price: "price",
+};
+
+const ProductCols = {
+  id: "id",
+  name: "name",
+  description: "description",
+  imageUrl: "image_url",
+  brandId: "brand_id",
+  categoryId: "category_id",
+  price: "price",
+  stock: "stock",
+  isActive: "is_active",
+  createdAt: "created_at",
+};
+
+const ProductVariantCols = {
+  id: "id",
+  productId: "product_id",
+  variantName: "variant_name",
+  additionalPrice: "additional_price",
+};
+
+const NumberOTPCols = {
+  number: "number",
+  otp: "otp",
 };
 
 function getColumns(tableName) {
-  const UserCols = {
-    id: "id",
-    name: "name",
-    email: "email",
-    password: "password_hash",
-    role: "role",
-    createdAt: "created_at",
-  };
-
-  const AddressCols = {
-    id: "id",
-    customerId: "customer_id",
-    addressLine: "address_line",
-    city: "city",
-    state: "state",
-    postalCode: "postal_code",
-    longitude: "longitudes",
-    latitude: "latitudes",
-    country: "country",
-  };
-
-  const BrandCols = {
-    id: "id",
-    name: "name",
-    description: "description",
-    imageUrl: "image_url",
-    isActive: "is_active",
-    createdAt: "created_at",
-  };
-
-  const CartCols = {
-    id: "id",
-    customerId: "customer_id",
-    createdAt: "created_at",
-  };
-
-  const CartItemCols = {
-    id: "id",
-    cartId: "cart_id",
-    productId: "product_id",
-    quantity: "quantity",
-  };
-
-  const CategoryCols = {
-    id: "id",
-    name: "name",
-    imageUrl: "image_url",
-    description: "description",
-  };
-
-  const CustomerCols = {
-    id: "id",
-    name: "name",
-    email: "email",
-    password: "password",
-    number: "number",
-    createdAt: "created_at",
-  };
-
-  const OrderCols = {
-    id: "id",
-    customerId: "customer_id",
-    shippingAddress: "shipping_address",
-    totalAmount: "total_amount",
-    status: "status",
-    createdAt: "created_at",
-  };
-
-  const OrderItemCols = {
-    id: "id",
-    orderId: "order_id",
-    productId: "product_id",
-    quantity: "quantity",
-    price: "price",
-  };
-
-  const ProductCols = {
-    id: "id",
-    name: "name",
-    description: "description",
-    imageUrl: "image_url",
-    brandId: "brand_id",
-    categoryId: "category_id",
-    price: "price",
-    stock: "stock",
-    isActive: "is_active",
-    createdAt: "created_at",
-  };
-
-  const ProductVariantCols = {
-    id: "id",
-    productId: "product_id",
-    variantName: "variant_name",
-    additionalPrice: "additional_price",
-  };
-
   switch (tableName) {
     case tableNames.users:
       return UserCols;
@@ -135,6 +136,9 @@ function getColumns(tableName) {
     case tableNames.productVariants:
       return ProductVariantCols;
 
+    case tableNames.numberOtps:
+      return NumberOTPCols;
+
     case "":
     default:
       return Object.assign(
@@ -149,38 +153,76 @@ function getColumns(tableName) {
         OrderCols,
         OrderItemCols,
         ProductCols,
-        ProductVariantCols
+        ProductVariantCols,
+        NumberOTPCols
       );
   }
 }
 
 function getKeyColumn(tableName) {
-  const AppUserKey = "app_user_id";
-  const BranchKey = "branch_id";
-  const DriverKey = "driver_id";
-  const StudentKey = "student_id";
-  const VehicleKey = "vehicle_id";
-  const VehicleRouteKey = "route_id";
+  const userId = "user_id";
+  const addressId = "address_id";
+  const brandId = "brand_id";
+  const cartItemId = "cart_item_id";
+  const cartId = "cart_id";
+  const categorId = "category_id";
+  const customerId = "customer_id";
+  const orderItemId = "order_item_id";
+  const productVariantId = "product_variant_id";
+  const productId = "product_id";
+  const otpNumber = "number";
+
   switch (tableName) {
-    case tableNames.Users:
-      return AppUserKey;
+    case tableNames.users:
+      return userId;
 
-    case tableNames.Branch:
-      return BranchKey;
+    case tableNames.addresses:
+      return addressId;
 
-    case tableNames.Driver:
-      return DriverKey;
+    case tableNames.brands:
+      return brandId;
 
-    case tableNames.Student:
-      return StudentKey;
+    case tableNames.cartItems:
+      return cartItemId;
 
-    case tableNames.Vehicle:
-      return VehicleKey;
+    case tableNames.carts:
+      return cartId;
 
-    case tableNames.VehicleRoute:
-      return VehicleRouteKey;
+    case tableNames.categories:
+      return categorId;
+
+    case tableNames.customers:
+      return customerId;
+
+    case tableNames.orderItems:
+      return orderItemId;
+
+    case tableNames.productVariants:
+      return productVariantId;
+
+    case tableNames.products:
+      return productId;
+
+    case tableNames.numberOtps:
+      return otpNumber;
 
     default:
       return "id";
   }
 }
+module.exports = {
+  getColumns,
+  getKeyColumn,
+  NumberOTPCols,
+  CustomerCols,
+  ProductVariantCols,
+  ProductCols,
+  OrderItemCols,
+  OrderCols,
+  CategoryCols,
+  CartItemCols,
+  CartCols,
+  BrandCols,
+  AddressCols,
+  UserCols,
+};
