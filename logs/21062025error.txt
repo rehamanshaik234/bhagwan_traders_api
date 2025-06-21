@@ -1,0 +1,28 @@
+2025-06-21T11:09:11.529Z : Error in function dbFunctions - sqlTransaction. Error message- "Unknown column 'customer_id' in 'WHERE'"
+2025-06-21T11:09:11.531Z : Error in function dbFunctions - getAllItems. Error message- "Unknown column 'customer_id' in 'WHERE'"
+2025-06-21T11:10:01.942Z : Error in function dbFunctions - sqlTransaction. Error message- "Unknown column 'customer_id' in 'WHERE'"
+2025-06-21T11:10:01.943Z : Error in function dbFunctions - getAllItems. Error message- "Unknown column 'customer_id' in 'WHERE'"
+2025-06-21T11:11:49.243Z : Error in function dbFunctions - sqlTransaction. Error message- "Unknown column 'customer_id' in 'WHERE'"
+2025-06-21T11:11:49.302Z : Error in function dbFunctions - getAllItems. Error message- "Unknown column 'customer_id' in 'WHERE'"
+2025-06-21T11:12:15.984Z : Error in function dbFunctions - sqlTransaction. Error message- "Unknown column 'customer_id' in 'WHERE'"
+2025-06-21T11:12:16.017Z : Error in function dbFunctions - getAllItems. Error message- "Unknown column 'customer_id' in 'WHERE'"
+2025-06-21T11:12:38.659Z : Error in function dbFunctions - sqlTransaction. Error message- "Unknown column 'customer_id' in 'WHERE'"
+2025-06-21T11:12:38.669Z : Error in function dbFunctions - getAllItems. Error message- "Unknown column 'customer_id' in 'WHERE'"
+2025-06-21T11:13:25.911Z : Error in function dbFunctions - sqlTransaction. Error message- "Unknown column 'undefined' in 'WHERE'"
+2025-06-21T11:13:25.913Z : Error in function dbFunctions - getAllItems. Error message- "Unknown column 'undefined' in 'WHERE'"
+2025-06-21T11:15:19.814Z : Error in function dbFunctions - sqlTransaction. Error message- "Unknown column 'undefined' in 'WHERE'"
+2025-06-21T11:15:19.816Z : Error in function dbFunctions - getAllItems. Error message- "Unknown column 'undefined' in 'WHERE'"
+2025-06-21T11:15:41.351Z : Error in function dbFunctions - sqlTransaction. Error message- "Unknown column 'undefined' in 'WHERE'"
+2025-06-21T11:15:41.352Z : Error in function dbFunctions - getAllItems. Error message- "Unknown column 'undefined' in 'WHERE'"
+2025-06-21T11:16:14.060Z : Error in function dbFunctions - sqlTransaction. Error message- "Unknown column 'undefined' in 'WHERE'"
+2025-06-21T11:16:14.062Z : Error in function dbFunctions - getAllItems. Error message- "Unknown column 'undefined' in 'WHERE'"
+2025-06-21T11:16:28.698Z : Error in function dbFunctions - sqlTransaction. Error message- "Unknown column 'undefined' in 'WHERE'"
+2025-06-21T11:16:28.748Z : Error in function dbFunctions - getAllItems. Error message- "Unknown column 'undefined' in 'WHERE'"
+2025-06-21T11:16:44.383Z : Error in function dbFunctions - sqlTransaction. Error message- "Unknown column 'undefined' in 'WHERE'"
+2025-06-21T11:16:44.388Z : Error in function dbFunctions - getAllItems. Error message- "Unknown column 'undefined' in 'WHERE'"
+2025-06-21T11:34:48.734Z : Request Params- {}
+2025-06-21T11:34:48.735Z : Request Payload- {"number":"+917780518178"}
+2025-06-21T11:34:48.735Z : Error in function Customer Service - getUsers. Error message- "Cannot set properties of undefined (setting 'id')"
+2025-06-21T11:35:25.011Z : Request Params- {}
+2025-06-21T11:35:25.012Z : Request Payload- {"number":"+917780512178"}
+2025-06-21T11:35:25.012Z : Error in function Customer Service - getUsers. Error message- "Cannot set properties of undefined (setting 'id')"

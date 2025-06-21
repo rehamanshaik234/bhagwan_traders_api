@@ -1,3 +1,0 @@
-2023-11-28T19:18:35.406Z : Error in function dbFunctions - sqlTransaction. Error message- "Unknown column 'route_no' in 'where clause'"
-2023-11-28T19:18:35.407Z : Error in function dbFunctions - customQuery. Error message- "select * from student where branch_id = 1 and route_no = 1"
-2023-11-28T19:18:35.407Z : Error in function dbFunctions - customQuery. Error message- "Unknown column 'route_no' in 'where clause'"

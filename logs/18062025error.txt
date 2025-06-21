@@ -1,6 +1,0 @@
-2025-06-18T12:01:39.927Z : Error in function dbFunctions - sqlTransaction. Error message- "Duplicate entry '+917780519178' for key 'number'"
-2025-06-18T12:01:39.928Z : Error in function dbFunctions - addNewItem - table data. Error message- "customers - {\"number\":\"+917780519178\"}"
-2025-06-18T12:01:39.928Z : Error in function dbFunctions - addNewItem. Error message- "Duplicate entry '+917780519178' for key 'number'"
-2025-06-18T12:09:13.004Z : Error in function dbFunctions - sqlTransaction. Error message- "Duplicate entry '+917780519178' for key 'number'"
-2025-06-18T12:09:13.007Z : Error in function dbFunctions - addNewItem - table data. Error message- "customers - {\"number\":\"+917780519178\"}"
-2025-06-18T12:09:13.007Z : Error in function dbFunctions - addNewItem. Error message- "Duplicate entry '+917780519178' for key 'number'"

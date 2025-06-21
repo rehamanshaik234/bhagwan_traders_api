@@ -12,7 +12,7 @@ const tableNames = require("../helpers/tableNames.js");
 
 router.post("/registerCustomer", registerCustomer);
 router.post("/getCustomers", [authenticateToken.validJWTNeeded, getCustomers]);
-router.post("/getCustomerById/:id", [
+router.get("/getCustomerById", [
   authenticateToken.validJWTNeeded,
   getCustomerDetByRefId,
 ]);
@@ -22,21 +22,24 @@ module.exports = router;
 async function registerCustomer(req, res) {
   var resp = new Object();
   try {
-    var result;
+    var result = new Object();
     var isExist = await fndb.getItemByColumn(
       tableNames.customers,
       tablecols.CustomerCols.number,
       req.body.number
     );
     if (isExist.length > 0) {
-      result = isExist[0].id;
+      result = isExist[0];
     } else {
-      result = await fndb.addNewItem(tableNames.customers, req.body);
+      var _result = await fndb.addNewItem(tableNames.customers, req.body);
+      result.id = _result;
+      result.number = req.body.number;
     }
     if (result) {
       const token = jwt.sign({ sub: result }, apiConfig.jwtSecret);
       resp.success = true;
       resp.token = token;
+      resp.customer = result;
       resp.message = "Successfully Login";
     } else {
       resp.success = false;
@@ -96,31 +99,10 @@ async function deleteUser(req, res) {
   return res.send(resp);
 }
 
-async function getCustomerDetByRefId(usr) {
+async function getCustomerDetByRefId(req, resp) {
   var userDet = new Object();
-  let result;
-  switch (usr.UserRoleId) {
-    case 1:
-    case 2:
-      userDet.fullName = usr.userName + " (Administrator)";
-      userDet.routeNo = 0;
-      break;
-    case 3:
-      result = await fndb.getItemById(tables.Driver, usr.RefId);
-      if (result) {
-        userDet.fullName = result.fullName;
-        userDet.routeNo = 1;
-      }
-      break;
-    case 4:
-      result = await fndb.getItemById(tables.Student, usr.RefId);
-      if (result) {
-        userDet.fullName = result.fullName;
-        userDet.routeNo = result.routeNo;
-      }
-      break;
-    default:
-      userDet.fullName = usr.userName;
-  }
-  return userDet;
+  let result = await fndb.getItemById(tableNames.customers, req.query.id);
+  console.log(result);
+  userDet = result;
+  return resp.send(userDet);
 }

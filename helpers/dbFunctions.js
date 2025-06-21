@@ -62,7 +62,7 @@ async function getItemById(tableName, dataId) {
   try {
     const keyCol = tablecols.getKeyColumn(tableName);
     const queryText =
-      "SELECT * FROM " + tableName + " WHERE " + keyCol + " = " + dataId;
+      "SELECT * FROM " + tableName + " WHERE " + "id" + " = " + dataId;
     const result = await sqlTransaction(queryText, "");
     var resultArray = await transformColumns(tableName, result);
     return resultArray.length > 0 ? resultArray[0] : null;
