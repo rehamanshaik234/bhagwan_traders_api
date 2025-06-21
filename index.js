@@ -20,7 +20,7 @@ app.get("/materialmartapi/", (req, res) => {
 
 app.post("/upload", upload.single("file"), async (req, res) => {
   try {
-    const _path = path.join(__dirname, "../uploads");
+    const _path = path.join(__dirname, "../../uploads");
     const fileUrl = `${_path.replace("\\", "/")}/${req.file.filename}`;
     res.json({
       message: "File uploaded successfully",
