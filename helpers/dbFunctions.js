@@ -13,6 +13,7 @@ module.exports = {
   deleteItem,
   customQuery,
   addOrUpdateItem,
+  getAllItemsByID,
 };
 
 async function transformColumns(tableName, result) {
@@ -97,6 +98,19 @@ async function getItemByColumn(tableName, colName, colValue, isNumber = false) {
 async function getAllItems(tableName) {
   try {
     const queryText = "SELECT * FROM " + tableName;
+    const result = await sqlTransaction(queryText, "");
+    var resultArray = await transformColumns(tableName, result);
+    return resultArray;
+  } catch (err) {
+    fnCommon.logErrorMsg("dbFunctions - getAllItems", null, err.message);
+    return null;
+  }
+}
+
+async function getAllItemsByID(tableName, colName, colValue) {
+  try {
+    const queryText =
+      "SELECT * FROM " + tableName + "WHERE " + colName + " = " + colValue;
     const result = await sqlTransaction(queryText, "");
     var resultArray = await transformColumns(tableName, result);
     return resultArray;

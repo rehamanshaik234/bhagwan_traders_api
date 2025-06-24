@@ -12,13 +12,14 @@ const UserCols = {
 const AddressCols = {
   id: "id",
   customerId: "customer_id",
-  addressLine: "address_line",
+  title: "title",
+  landmark: "landmark",
   city: "city",
   state: "state",
   postalCode: "postal_code",
   longitude: "longitudes",
   latitude: "latitudes",
-  country: "country",
+  houseNnumber: "house_number",
 };
 
 const BrandCols = {
