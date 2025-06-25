@@ -39,7 +39,7 @@ async function registerCustomer(req, res) {
       const token = jwt.sign({ sub: result }, apiConfig.jwtSecret);
       resp.success = true;
       resp.token = token;
-      resp.customer = result;
+      resp.data = result;
       resp.message = "Successfully Login";
     } else {
       resp.success = false;

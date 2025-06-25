@@ -53,7 +53,7 @@ async function updateAddress(req, res) {
       const addresses = await fndb.getItemById(tableNames.addresses, body.id);
       resp = {
         status: true,
-        message: `Address Added Successfully`,
+        message: `Address Updated Successfully`,
         data: addresses,
       };
     } else {
