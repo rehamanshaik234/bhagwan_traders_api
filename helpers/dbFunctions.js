@@ -61,7 +61,6 @@ async function sqlTransaction(queryText, dataVlues) {
 
 async function getItemById(tableName, dataId) {
   try {
-    const keyCol = tablecols.getKeyColumn(tableName);
     const queryText =
       "SELECT * FROM " + tableName + " WHERE " + "id" + " = " + dataId;
     const result = await sqlTransaction(queryText, "");
@@ -74,7 +73,6 @@ async function getItemById(tableName, dataId) {
 }
 
 async function getItemByColumn(tableName, colName, colValue, isNumber = false) {
-  const keyCol = tablecols.getKeyColumn(tableName);
   let queryText = "SELECT * FROM " + tableName + " WHERE " + colName + " = ";
   if (isNumber) {
     queryText += colValue;
@@ -110,7 +108,7 @@ async function getAllItems(tableName) {
 async function getAllItemsByID(tableName, colName, colValue) {
   try {
     const queryText =
-      "SELECT * FROM " + tableName + "WHERE " + colName + " = " + colValue;
+      "SELECT * FROM " + tableName + " WHERE " + colName + " = " + colValue;
     const result = await sqlTransaction(queryText, "");
     var resultArray = await transformColumns(tableName, result);
     return resultArray;
@@ -122,16 +120,8 @@ async function getAllItemsByID(tableName, colName, colValue) {
 
 async function addNewItem(tableName, data) {
   try {
-    const cols = tablecols.getColumns(tableName);
-    var dataVal = {};
-    var colKeys = Object.keys(cols);
-    var colVals = Object.values(cols);
-    for (i = 0; i < colKeys.length; i++) {
-      var k = colKeys[i];
-      dataVal[colVals[i]] = data[k];
-    }
     const queryText = "INSERT INTO " + tableName + " SET ?";
-    var result = await sqlTransaction(queryText, dataVal);
+    var result = await sqlTransaction(queryText, data);
     return result.affectedRows > 0 ? result.insertId : 0;
   } catch (err) {
     fnCommon.logErrorMsg(
@@ -146,26 +136,15 @@ async function addNewItem(tableName, data) {
 
 async function updateItem(tableName, dataId, data) {
   try {
-    const cols = tablecols.getColumns(tableName);
-    const keyCol = tablecols.getKeyColumn(tableName);
-    var dataVal = {};
-    var colKeys = Object.keys(cols);
-    var colVals = Object.values(cols);
-    for (i = 0; i < colKeys.length; i++) {
-      var k = colKeys[i];
-      if (data[k] != null) {
-        dataVal[colVals[i]] = data[k];
-      }
-    }
-    const columns = Object.keys(dataVal);
-    const values = Object.values(dataVal);
+    const columns = Object.keys(data);
+    const values = Object.values(data);
     let queryText =
       "UPDATE " +
       tableName +
       " SET " +
       columns.join(" = ?, ") +
       " = ?  WHERE " +
-      keyCol +
+      "id" +
       " = " +
       dataId;
     const result = await sqlTransaction(queryText, values);
@@ -185,10 +164,8 @@ async function updateItem(tableName, dataId, data) {
 
 async function addOrUpdateItem(tableName, dataId, data) {
   try {
-    const keyCol = tablecols.getKeyColumn(tableName);
-
     // 1. Check if item exists
-    const checkQuery = `SELECT COUNT(*) as count FROM ${tableName} WHERE ${keyCol} = ?`;
+    const checkQuery = `SELECT COUNT(*) as count FROM ${tableName} WHERE id = ?`;
     const checkResult = await sqlTransaction(checkQuery, [dataId]);
     if (checkResult[0].count > 0) {
       // 2. Exists → Update

@@ -35,7 +35,7 @@ app.post("/upload", upload.single("file"), async (req, res) => {
 app.use("/materialmartapi/common", require("./services/commonservice"));
 app.use("/materialmartapi/auth", require("./services/auth_service"));
 app.use("/materialmartapi/customer", require("./services/customerservices"));
-app.use("/materialmartapi/user", require("./services/userservice"));
+app.use("/materialmartapi/addresses", require("./services/addresses_service"));
 
 var server = http.createServer(app);
 

@@ -6,48 +6,48 @@ const UserCols = {
   email: "email",
   password: "password_hash",
   role: "role",
-  createdAt: "created_at",
+  created_at: "created_at",
 };
 
 const AddressCols = {
   id: "id",
-  customerId: "customer_id",
+  customer_id: "customer_id",
   title: "title",
   landmark: "landmark",
   city: "city",
   state: "state",
-  postalCode: "postal_code",
-  longitude: "longitudes",
-  latitude: "latitudes",
-  houseNnumber: "house_number",
+  postal_code: "postal_code",
+  longitude: "longitude",
+  latitude: "latitude",
+  house_nuumber: "house_number",
 };
 
 const BrandCols = {
   id: "id",
   name: "name",
   description: "description",
-  imageUrl: "image_url",
-  isActive: "is_active",
-  createdAt: "created_at",
+  image_url: "image_url",
+  is_active: "is_active",
+  created_at: "created_at",
 };
 
 const CartCols = {
   id: "id",
-  customerId: "customer_id",
-  createdAt: "created_at",
+  customer_id: "customer_id",
+  created_at: "created_at",
 };
 
 const CartItemCols = {
   id: "id",
-  cartId: "cart_id",
-  productId: "product_id",
+  cart_id: "cart_id",
+  product_id: "product_id",
   quantity: "quantity",
 };
 
 const CategoryCols = {
   id: "id",
   name: "name",
-  imageUrl: "image_url",
+  image_url: "image_url",
   description: "description",
 };
 
@@ -57,22 +57,22 @@ const CustomerCols = {
   email: "email",
   password: "password",
   number: "number",
-  createdAt: "created_at",
+  created_at: "created_at",
 };
 
 const OrderCols = {
   id: "id",
-  customerId: "customer_id",
-  shippingAddress: "shipping_address",
-  totalAmount: "total_amount",
+  customer_id: "customer_id",
+  shipping_address: "shipping_address",
+  total_amount: "total_amount",
   status: "status",
-  createdAt: "created_at",
+  created_at: "created_at",
 };
 
 const OrderItemCols = {
   id: "id",
-  orderId: "order_id",
-  productId: "product_id",
+  order_id: "order_id",
+  product_id: "product_id",
   quantity: "quantity",
   price: "price",
 };
@@ -81,20 +81,20 @@ const ProductCols = {
   id: "id",
   name: "name",
   description: "description",
-  imageUrl: "image_url",
-  brandId: "brand_id",
-  categoryId: "category_id",
+  image_url: "image_url",
+  brand_id: "brand_id",
+  category_id: "category_id",
   price: "price",
   stock: "stock",
-  isActive: "is_active",
-  createdAt: "created_at",
+  is_active: "is_active",
+  created_at: "created_at",
 };
 
 const ProductVariantCols = {
   id: "id",
-  productId: "product_id",
-  variantName: "variant_name",
-  additionalPrice: "additional_price",
+  product_id: "product_id",
+  variant_name: "variant_name",
+  additional_price: "additional_price",
 };
 
 const NumberOTPCols = {
