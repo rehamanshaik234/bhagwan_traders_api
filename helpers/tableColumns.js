@@ -9,6 +9,13 @@ const UserCols = {
   created_at: "created_at",
 };
 
+const CustomerGstCols = {
+  id: "id",
+  customer_id: "customer_id",
+  address_id: "address_id",
+  gst_number: "gst_number",
+};
+
 const AddressCols = {
   id: "id",
   customer_id: "customer_id",
@@ -140,6 +147,9 @@ function getColumns(tableName) {
     case tableNames.numberOtps:
       return NumberOTPCols;
 
+    case tableNames.customer_gsts:
+      return CustomerGstCols;
+
     case "":
     default:
       return Object.assign(
@@ -155,7 +165,8 @@ function getColumns(tableName) {
         OrderItemCols,
         ProductCols,
         ProductVariantCols,
-        NumberOTPCols
+        NumberOTPCols,
+        CustomerGstCols
       );
   }
 }
@@ -172,6 +183,7 @@ function getKeyColumn(tableName) {
   const productVariantId = "product_variant_id";
   const productId = "product_id";
   const otpNumber = "number";
+  const customergstId = "customer_gst_id";
 
   switch (tableName) {
     case tableNames.users:
@@ -207,6 +219,9 @@ function getKeyColumn(tableName) {
     case tableNames.numberOtps:
       return otpNumber;
 
+    case tableNames.customer_gsts:
+      return customergstId;
+
     default:
       return "id";
   }
@@ -226,4 +241,5 @@ module.exports = {
   BrandCols,
   AddressCols,
   UserCols,
+  CustomerGstCols,
 };

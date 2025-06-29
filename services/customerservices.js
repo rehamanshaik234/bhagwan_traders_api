@@ -22,24 +22,30 @@ module.exports = router;
 async function registerCustomer(req, res) {
   var resp = new Object();
   try {
-    var result = new Object();
+    var customerData = new Object();
     var isExist = await fndb.getItemByColumn(
       tableNames.customers,
       tablecols.CustomerCols.number,
       req.body.number
     );
     if (isExist.length > 0) {
-      result = isExist[0];
+      customerData = isExist[0];
     } else {
       var _result = await fndb.addNewItem(tableNames.customers, req.body);
-      result.id = _result;
-      result.number = req.body.number;
+      customerData.id = _result;
+      customerData.number = req.body.number;
     }
-    if (result) {
-      const token = jwt.sign({ sub: result }, apiConfig.jwtSecret);
+    if (customerData) {
+      const token = jwt.sign({ sub: customerData.id }, apiConfig.jwtSecret);
+      var customerGstsData = await fndb.getAllItemsByID(
+        tables.customer_gsts,
+        tablecols.CustomerGstCols.customer_id,
+        customerData.id
+      );
+      customerData.is_added_gst = customerGstsData.length > 0;
       resp.success = true;
       resp.token = token;
-      resp.data = result;
+      resp.data = customerData;
       resp.message = "Successfully Login";
     } else {
       resp.success = false;
@@ -59,11 +65,11 @@ async function getCustomers(req, res) {
   try {
     var result;
     if (req.body.id) {
-      result = await fndb.getItemById(tables.Users, req.body.id);
+      result = await fndb.getItemById(tables.users, req.body.id);
     } else if (req.body.onlyActive) {
-      result = await fndb.getActiveBranchItems(tables.Users, req.body.branchId);
+      result = await fndb.getActiveBranchItems(tables.users, req.body.branchId);
     } else {
-      result = await fndb.getAllBranchItems(tables.Users, req.body.branchId);
+      result = await fndb.getAllBranchItems(tables.users, req.body.branchId);
     }
 
     if (result) {

@@ -1,6 +1,7 @@
 module.exports = {
   users: "users",
   customers: "customers",
+  customer_gsts: "customer_gsts",
   addresses: "addresses",
   brands: "brands",
   carts: "carts",
