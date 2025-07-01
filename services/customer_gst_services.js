@@ -15,7 +15,7 @@ async function addGst(req, res) {
     if (result != null) {
       resp = {
         status: true,
-        message: `Address Added Successfully`,
+        message: `GST Added Successfully`,
         data: result,
       };
     } else {
