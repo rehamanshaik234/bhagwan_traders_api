@@ -13,15 +13,10 @@ async function addGst(req, res) {
     var body = req.body;
     const result = await fndb.addNewItem(tableNames.customer_gsts, body);
     if (result != null) {
-      const addresses = await fndb.getAllItemsByID(
-        tableNames.addresses,
-        AddressCols.customer_id,
-        body.customer_id
-      );
       resp = {
         status: true,
         message: `Address Added Successfully`,
-        data: addresses,
+        data: result,
       };
     } else {
       resp = { status: false, error: "Query execution error" };
