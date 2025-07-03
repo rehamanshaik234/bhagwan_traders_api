@@ -27,7 +27,7 @@ const AddressCols = {
   postal_code: "postal_code",
   longitude: "longitude",
   latitude: "latitude",
-  house_nuumber: "house_number",
+  house_number: "house_number",
   building_name: "building_name",
 };
 
