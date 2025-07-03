@@ -20,13 +20,15 @@ const AddressCols = {
   id: "id",
   customer_id: "customer_id",
   title: "title",
-  landmark: "landmark",
+  address_line: "address_line",
+  area: "area",
   city: "city",
   state: "state",
   postal_code: "postal_code",
   longitude: "longitude",
   latitude: "latitude",
   house_nuumber: "house_number",
+  building_name: "building_name",
 };
 
 const BrandCols = {

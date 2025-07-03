@@ -124,6 +124,7 @@ async function addNewItem(tableName, data) {
     var result = await sqlTransaction(queryText, data);
     return result.affectedRows > 0 ? result.insertId : 0;
   } catch (err) {
+    console.log(err);
     fnCommon.logErrorMsg(
       "dbFunctions - addNewItem - table data",
       null,
