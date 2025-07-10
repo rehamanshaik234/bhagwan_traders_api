@@ -69,12 +69,25 @@ const CustomerCols = {
   created_at: "created_at",
 };
 
+const DeliveryPartnerCols = {
+  id: "id",
+  name: "name",
+  email: "email",
+  password: "password",
+  number: "number",
+  created_at: "created_at",
+};
+
 const OrderCols = {
   id: "id",
   customer_id: "customer_id",
   shipping_address: "shipping_address",
   total_amount: "total_amount",
   status: "status",
+  delivery_partner_id: "delivery_partner_id",
+  address_id: "address_id",
+  latitude: "latitude",
+  longitude: "longitude",
   created_at: "created_at",
 };
 
@@ -152,6 +165,9 @@ function getColumns(tableName) {
     case tableNames.customer_gsts:
       return CustomerGstCols;
 
+    case tableNames.delivery_partner:
+      return DeliveryPartnerCols;
+
     case "":
     default:
       return Object.assign(
@@ -168,7 +184,8 @@ function getColumns(tableName) {
         ProductCols,
         ProductVariantCols,
         NumberOTPCols,
-        CustomerGstCols
+        CustomerGstCols,
+        DeliveryPartnerCols
       );
   }
 }
@@ -186,6 +203,7 @@ function getKeyColumn(tableName) {
   const productId = "product_id";
   const otpNumber = "number";
   const customergstId = "customer_gst_id";
+  const deliveryPartnerId = "delivery_partner_id";
 
   switch (tableName) {
     case tableNames.users:
@@ -224,6 +242,9 @@ function getKeyColumn(tableName) {
     case tableNames.customer_gsts:
       return customergstId;
 
+    case tableNames.delivery_partner:
+      return deliveryPartnerId;  
+
     default:
       return "id";
   }
@@ -244,4 +265,5 @@ module.exports = {
   AddressCols,
   UserCols,
   CustomerGstCols,
+  DeliveryPartnerCols
 };

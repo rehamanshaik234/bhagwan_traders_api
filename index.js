@@ -6,6 +6,12 @@ const path = require("path");
 require("dotenv").config();
 const { connection, pool } = require("./helpers/mySQLConnector");
 const { upload } = require("./helpers/fileupload");
+const  SocketIO= require("socket.io");
+const order_tracking = require("./services/socket/orders_tracking");
+const order_delivery_tracking = require("./services/socket/order_delivery_tracking");
+var server = http.createServer(app);
+const io = SocketIO(server);
+
 
 app.use(express.json({ limit: "50mb" }));
 app.use(
@@ -31,6 +37,7 @@ app.post("/upload", upload.single("file"), async (req, res) => {
   }
 });
 
+
 // api routes
 app.use("/materialmartapi/common", require("./services/commonservice"));
 app.use("/materialmartapi/auth", require("./services/auth_service"));
@@ -41,7 +48,6 @@ app.use(
   require("./services/customer_gst_services")
 );
 
-var server = http.createServer(app);
 
 // prod
 //server.listen();
@@ -49,3 +55,8 @@ server.listen(3000, async () => {
   console.log(await connection());
   console.log("Listening on port 3000");
 });
+
+io.on("connection", (socket) => { 
+    order_tracking(socket, io);
+    order_delivery_tracking(socket, io);
+  });

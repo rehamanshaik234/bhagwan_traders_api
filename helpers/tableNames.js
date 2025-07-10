@@ -12,4 +12,5 @@ module.exports = {
   products: "products",
   productVariants: "product_variants",
   numberOtps: "number_otps",
+  delivery_partner: "delivery_partner",
 };
