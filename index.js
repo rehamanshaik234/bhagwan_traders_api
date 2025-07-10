@@ -43,10 +43,18 @@ app.use("/materialmartapi/common", require("./services/commonservice"));
 app.use("/materialmartapi/auth", require("./services/auth_service"));
 app.use("/materialmartapi/customer", require("./services/customerservices"));
 app.use("/materialmartapi/addresses", require("./services/addresses_service"));
+app.use("/materialmartapi/categories", require("./services/category_services"));
+app.use(
+  "/materialmartapi/subcategories",
+  require("./services/sub_category_services")
+);
+
 app.use(
   "/materialmartapi/customerGst",
   require("./services/customer_gst_services")
 );
+
+app.use("/materialmartapi/products", require("./services/product_services"));
 
 
 // prod

@@ -103,7 +103,6 @@ const ProductCols = {
   id: "id",
   name: "name",
   description: "description",
-  image_url: "image_url",
   brand_id: "brand_id",
   category_id: "category_id",
   price: "price",
@@ -122,6 +121,21 @@ const ProductVariantCols = {
 const NumberOTPCols = {
   number: "number",
   otp: "otp",
+};
+
+const ProductImagesCols = {
+  id: "id",
+  product_id: "product_id",
+  image_url: "image_url",
+};
+
+const SubCategoryCols = {
+  id: "id",
+  name: "name",
+  image_url: "image_url",
+  description: "description",
+  category_id: "category_id",
+  created_at: "created_at",
 };
 
 function getColumns(tableName) {
@@ -168,6 +182,12 @@ function getColumns(tableName) {
     case tableNames.delivery_partner:
       return DeliveryPartnerCols;
 
+    case tableNames.product_images:
+      return ProductImagesCols;  
+
+    case tableNames.subCategories:
+      return SubCategoryCols;  
+
     case "":
     default:
       return Object.assign(
@@ -185,7 +205,9 @@ function getColumns(tableName) {
         ProductVariantCols,
         NumberOTPCols,
         CustomerGstCols,
-        DeliveryPartnerCols
+        DeliveryPartnerCols,
+        ProductImagesCols,
+        SubCategoryCols
       );
   }
 }
@@ -204,6 +226,8 @@ function getKeyColumn(tableName) {
   const otpNumber = "number";
   const customergstId = "customer_gst_id";
   const deliveryPartnerId = "delivery_partner_id";
+  const productImageId = "product_image_id";
+  const subCategoryId = "sub_category_id";  
 
   switch (tableName) {
     case tableNames.users:
@@ -243,7 +267,13 @@ function getKeyColumn(tableName) {
       return customergstId;
 
     case tableNames.delivery_partner:
-      return deliveryPartnerId;  
+      return deliveryPartnerId; 
+     
+     case tableNames.product_images:
+      return productImageId; 
+
+     case tableNames.subCategories:
+      return subCategoryId; 
 
     default:
       return "id";
@@ -265,5 +295,7 @@ module.exports = {
   AddressCols,
   UserCols,
   CustomerGstCols,
-  DeliveryPartnerCols
+  DeliveryPartnerCols,
+  ProductImagesCols,
+  SubCategoryCols
 };

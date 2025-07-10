@@ -215,12 +215,11 @@ async function deleteItem(tableName, dataId) {
   }
 }
 
-async function customQuery(tableName, queryText) {
+async function customQuery(queryText,dataValues = []) {
   try {
-    const result = await sqlTransaction(queryText, "");
-    var resultArray = await transformColumns(tableName, result);
-    if (resultArray && resultArray.length > 0) {
-      return resultArray;
+    const result = await sqlTransaction(queryText, dataValues);
+    if (result && result.length > 0) {
+      return result;
     } else {
       return result;
     }
