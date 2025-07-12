@@ -6,10 +6,12 @@ const fndb = require("../helpers/dbFunctions.js");
 const { AddressCols } = require("../helpers/tableColumns.js");
 const authenticateToken = require("../helpers/authtoken.js");
 const {uploadCategoryImage}= require("../helpers/fileupload.js");
+const e = require("express");
 
 router.post("/addCategory", [authenticateToken.validJWTNeeded, uploadCategoryImage.single('file') ,addCategory]);
 router.get("/categoryById", [authenticateToken.validJWTNeeded, getCategoryById]);  
 router.get("/allCategories", [authenticateToken.validJWTNeeded, getAllCategories]);
+router.get("/allCategoriesWithSubCategories", [authenticateToken.validJWTNeeded, getAllCategoriesWithSubCategories]);
 
 
 async function addCategory(req, res) {
@@ -55,6 +57,47 @@ async function getAllCategories(req, res) {
   }
   return res.send(resp);
 }   
+
+async function getAllCategoriesWithSubCategories(req, res) {
+  var resp = new Object();
+  try {
+    var result = await fndb.customQuery(`
+      SELECT c.*,
+          JSON_ARRAYAGG(
+            JSON_OBJECT(
+              'id', sc.id,
+              'name', sc.name,
+              'description', sc.description,
+              'image_url', sc.image_url,
+              'created_at', sc.created_at
+            )
+          ) AS sub_categories
+        FROM categories AS c
+        LEFT JOIN sub_categories AS sc ON c.id = sc.category_id
+        GROUP BY c.id
+        ORDER BY c.created_at DESC
+    `);
+    if (result != null) {
+        result = result.map((e) => {
+          return {
+            ...e,
+            sub_categories: JSON.parse(e.sub_categories).slice(0, 9)
+          };
+        });
+        resp = {
+        status: true,
+        message: `Categories Retrieved Successfully`,
+        data: result,
+      };
+    } else {
+      resp = { status: false, error: "Query execution error" };
+    }
+  } catch (error) {
+    console.log(error);
+    resp = { status: false, error: error };
+  }
+  return res.send(resp);
+}  
    
 
 async function getCategoryById(req, res) {
