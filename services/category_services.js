@@ -69,6 +69,7 @@ async function getAllCategoriesWithSubCategories(req, res) {
               'name', sc.name,
               'description', sc.description,
               'image_url', sc.image_url,
+              'category_id', sc.category_id,
               'created_at', sc.created_at
             )
           ) AS sub_categories
