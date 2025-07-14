@@ -1,3 +1,4 @@
+const express = require("express");
 const router = express.Router();
 const { response } = require("express");
 const authenticateToken = require("../helpers/authtoken.js");
@@ -29,3 +30,5 @@ async function sendNotification(req, res) {
         return res.status(200).send("Error sending notification: " + error.message);
     }
 }
+
+module.exports = router;
