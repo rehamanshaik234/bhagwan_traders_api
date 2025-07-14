@@ -11,25 +11,25 @@ router.post("/sendNotification", [authenticateToken.validJWTNeeded, sendNotifica
 async function sendNotification(req, res) { 
     try {
         const token = await getAccessToken();
-        if(token === undefined || token === null) {
-        const response = await axios.post("https://fcm.googleapis.com/fcm/send", req.body, {
+        if(token != undefined || token != null) {
+        const response = await axios.post("https://fcm.googleapis.com/v1/projects/bhagwan-traders/messages:send", req.body, {
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `key=${token}`
+                "Authorization": `Bearer ${token}`
             }
         });
         if (response.status === 200) {
-            res.status(200).send("Notification sent successfully");
+            res.status(200).send({message : "Notification sent successfully", status: true});
         } else {
-           return res.status(200).send("Error sending notification");
+           return res.status(200).send({error:"Error sending notification"});
             }
         }else{
-           return res.status(401).send("Error retrieving access token");
+           return res.status(401).send({error:"Error retrieving access token"});
         }
     } catch (error) {
-        return res.status(200).send("Error sending notification: " + error.message);
+        console.error("Error sending notification:", error);
+        return res.status(200).send({error:"Error sending notification: " + error.message});
     }
-    
 }
 
 module.exports = router;
