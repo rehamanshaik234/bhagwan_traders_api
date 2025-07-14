@@ -42,6 +42,14 @@ async function registerCustomer(req, res) {
         tablecols.CustomerGstCols.customer_id,
         customerData.id
       );
+      if(req.body.fcm_token) {
+        customerData.fcm_token = req.body.fcm_token;
+        await fndb.updateItem(
+          tables.customers,
+          customerData.id,
+          { fcm_token: customerData.fcm_token }
+        );
+      }
       customerData.is_added_gst = customerGstsData.length > 0;
       resp.success = true;
       resp.token = token;

@@ -9,6 +9,8 @@ const { upload } = require("./helpers/fileupload");
 const  SocketIO= require("socket.io");
 const order_tracking = require("./services/socket/orders_tracking");
 const order_delivery_tracking = require("./services/socket/order_delivery_tracking");
+const { GoogleAuth } = require("google-auth-library");
+const { getAccessToken } = require("./helpers/google_token_service");
 var server = http.createServer(app);
 const io = SocketIO(server);
 
@@ -55,12 +57,12 @@ app.use(
 );
 
 app.use("/materialmartapi/products", require("./services/product_services"));
+app.use("/materialmartapi/notifications", require("./services/notification_service"));
 
 
 // prod
 //server.listen();
 server.listen(3000, async () => {
-  console.log(await connection());
   console.log("Listening on port 3000");
 });
 

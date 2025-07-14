@@ -22,7 +22,6 @@ async function addAddress(req, res) {
   try {
     var body = req.body;
     const result = await fndb.addNewItem(tableNames.addresses, body);
-    console.log(result);
     if (result != null) {
       const addresses = await fndb.getAllItemsByID(
         tableNames.addresses,
