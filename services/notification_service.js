@@ -29,6 +29,7 @@ async function sendNotification(req, res) {
     } catch (error) {
         return res.status(200).send("Error sending notification: " + error.message);
     }
+    
 }
 
 module.exports = router;
