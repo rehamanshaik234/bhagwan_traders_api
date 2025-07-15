@@ -57,6 +57,7 @@ app.use(
 );
 
 app.use("/materialmartapi/products", require("./services/product_services"));
+app.use("/materialmartapi/orders", require("./services/order_services"));
 app.use("/materialmartapi/notifications", require("./services/notification_service"));
 
 
