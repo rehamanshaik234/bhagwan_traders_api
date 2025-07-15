@@ -22,6 +22,8 @@ async function addProduct(req, res) {
     const _path = path.join(__dirname, "../../uploads/product");
     const fileUrls = req.files.map(file => `https://materialmart.shop/uploads/product/${file.filename}`); // Create an array of file URLs
     var body = req.body;
+    body.image_url = fileUrls.length > 0 ? fileUrls[0] : null;
+    body.is_active = body.is_active ? 1 : 0; // Ensure is_active is a number (1 or 0)
     const result = await fndb.addNewItem(tableNames.products, body);
     if (result != null) {
       body.id = result; // Get the inserted ID from the result. 
@@ -245,6 +247,9 @@ async function getProductsBySubCategoryId(req, res) {
 
   return res.send(resp);
 }
+
+
+
 
 
 module.exports = router;
