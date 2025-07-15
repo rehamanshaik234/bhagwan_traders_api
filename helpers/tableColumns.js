@@ -14,6 +14,8 @@ const CustomerGstCols = {
   customer_id: "customer_id",
   address_id: "address_id",
   gst_number: "gst_number",
+  gst_address: "gst_address",
+  shop_name: "shop_name"
 };
 
 const AddressCols = {
@@ -86,6 +88,9 @@ const OrderCols = {
   status: "status",
   delivery_partner_id: "delivery_partner_id",
   address_id: "address_id",
+  customer_gst_id: "customer_gst_id",
+  delivery_charges: "delivery_charges",
+  delivery_distance: "delivery_distance",
   latitude: "latitude",
   longitude: "longitude",
   created_at: "created_at",

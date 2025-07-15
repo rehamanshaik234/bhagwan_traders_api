@@ -8,18 +8,30 @@ module.exports = (socket, io) => {
     console.log('Getting order details for:', data);
     socket.orderId = data.orderId;
     socket.join(`${data.orderId}`);
-    const result= await fndb.getItemById(
-      tableNames.orders,data.orderId
+    var result={};
+    const orderDetails= await fndb.customQuery(
+      `SELECT * FROM ${tableNames.orders}
+      LEFT JOIN ${tableNames.customer_gsts} ON ${tableNames.orders}.customer_gst_id = ${tableNames.customer_gsts}.id
+      LEFT JOIN ${tableNames.addresses} ON ${tableNames.orders}.address_id = ${tableNames.addresses}.id
+      LEFT JOIN ${tableNames.delivery_partner} ON ${tableNames.orders}.delivery_partner_id = ${tableNames.delivery_partner}.id
+      WHERE ${tableNames.orders}.id = ?`, [data.orderId]
     );
+    if (orderDetails && orderDetails.length > 0) {
+      const orderItems= await fndb.customQuery(`SELECT order_items.id AS order_item_id, order_items.quantity, order_items.price,
+       JSON_OBJECT( 'id', products.id, 'name', products.name, 'description', products.description, 'image_url',products.image_url, 'price',products.price, 'is_active',products.is_active, 'stock',products.stock, 'sub_category_id',products.sub_category_id ) AS product FROM order_items 
+       LEFT JOIN products ON order_items.product_id = products.id WHERE order_items.order_id = ?`,[data.orderId]);
+      result = { 
+          order: orderDetails[0],
+          order_items: orderItems
+        };
     if (result) {
-      console.log('Order details:', result);
       socket.emit('order_details', {
-        order: result,
+        data: result,
         message: 'Order details retrieved successfully',
         timestamp: new Date()
       });
     }
-  });
+  }});
 
     // Handle order updates
   socket.on('update_location', async(data) => {
@@ -37,13 +49,13 @@ module.exports = (socket, io) => {
             updateData
         );
         if(result) {
-            console.log('Order updated successfully:', result);
-            // Emit the updated order details to all clients in the room
             io.to(`${orderId}`).emit('order_details', {
                 orderId: orderId,
                 latitude: data.latitude,
                 longitude: data.longitude,
                 status: data.status,
+                message: 'Order location updated successfully',
+                timestamp: new Date()
             });
         }
     });
@@ -66,6 +78,8 @@ module.exports = (socket, io) => {
             io.to(`${orderId}`).emit('order_details', {
                 orderId: orderId,
                 status: data.status,
+                message: 'Order status updated successfully',
+                timestamp: new Date()
             });
         }
     }); 
