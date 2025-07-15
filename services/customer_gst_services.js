@@ -33,7 +33,7 @@ async function addGst(req, res) {
 async function getCustomerGSTS(req, res) {
   var resp = new Object();
   try {
-    var customer_id = req.params.customer_id;
+    var customer_id = req.query.customer_id;
     const result = await fndb.getAllItemsByID(tableNames.customer_gsts, CustomerGstCols.customer_id, customer_id);
     if (result != null) {
       resp = {
