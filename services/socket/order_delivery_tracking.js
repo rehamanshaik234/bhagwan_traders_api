@@ -17,7 +17,7 @@ module.exports = (socket, io) => {
       WHERE ${tableNames.orders}.id = ?`, [data.orderId]
     );
     if (orderDetails && orderDetails.length > 0) {
-      const orderItems= await fndb.customQuery(`SELECT order_items.id AS order_item_id, order_items.quantity, order_items.price,
+      const orderItems= await fndb.customQuery(`SELECT order_items.id AS id, order_items.quantity, order_items.price,
        JSON_OBJECT( 'id', products.id, 'name', products.name, 'description', products.description, 'image_url',products.image_url, 'price',products.price, 'is_active',products.is_active, 'stock',products.stock, 'sub_category_id',products.sub_category_id ) AS product FROM order_items 
        LEFT JOIN products ON order_items.product_id = products.id WHERE order_items.order_id = ?`,[data.orderId]);
       if (orderItems && orderItems.length > 0) {
