@@ -6,7 +6,7 @@ const { AddressCols, CustomerGstCols } = require("../helpers/tableColumns.js");
 const authenticateToken = require("../helpers/authtoken");
 
 router.post("/addGst", [authenticateToken.validJWTNeeded, addGst]);
-router.post("/getCustomerGSTS", [authenticateToken.validJWTNeeded, getCustomerGSTS]);
+router.get("/getCustomerGSTS", [authenticateToken.validJWTNeeded, getCustomerGSTS]);
 
 
 async function addGst(req, res) {
