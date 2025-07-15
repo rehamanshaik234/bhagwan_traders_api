@@ -6,7 +6,6 @@ const { AddressCols, CustomerGstCols, OrderItemCols, OrderCols } = require("../h
 const authenticateToken = require("../helpers/authtoken");
 
 router.post("/placeOrder", [authenticateToken.validJWTNeeded, placeOrder]);
-router.post("/getCustomerGSTS", [authenticateToken.validJWTNeeded, getCustomerGSTS]);
 
 
 async function placeOrder(req, res) {
