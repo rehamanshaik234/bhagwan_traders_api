@@ -13,6 +13,7 @@ router.get("/allProducts", [authenticateToken.validJWTNeeded, getAllProducts]);
 
 // Function to get products by subcategory ID
 router.get("/productsBySubCategoryId", [authenticateToken.validJWTNeeded, getProductsBySubCategoryId]);
+router.get("/searchProducts", [authenticateToken.validJWTNeeded, searchProducts]);
 
 
 
@@ -240,6 +241,76 @@ async function getProductsBySubCategoryId(req, res) {
       };
     } else {
       resp = { status: false, error: "No products found for given sub-category" };
+    }
+  } catch (error) {
+    resp = { status: false, error: error.message };
+  }
+
+  return res.send(resp);
+}
+
+
+
+async function searchProducts(req, res) {
+  let resp = {};
+  try {
+    const searchTerm = req.query.term;
+    const subCategoryId = req.query.subCategoryId;
+
+    // Fetch products matching the search term
+    const result = await fndb.customQuery(`
+      SELECT 
+        p.*,
+        sc.id AS sc_id,
+        sc.name AS sc_name,
+        sc.description AS sc_description,
+        c.id AS c_id,
+        c.name AS c_name,
+        c.description AS c_description
+      FROM products p
+      LEFT JOIN sub_categories sc ON p.sub_category_id = sc.id
+      LEFT JOIN categories c ON sc.category_id = c.id
+      WHERE p.is_active = 1 
+      AND sc.id = ?
+      AND (p.name LIKE ? OR p.description LIKE ?)
+    `, [subCategoryId, `%${searchTerm}%`, `%${searchTerm}%`]);
+
+    if (result && result.length > 0) {
+      const productsWithDetails = await Promise.all(result.map(async (product) => {
+        // Get images for each product
+        const images = await fndb.getAllItemsByID(tableNames.product_images, "product_id", product.id);
+        product.image_urls = images.map(image => image.image_url);
+
+        // Structure nested sub_category and category
+        product.sub_category = {
+          id: product.sc_id,
+          name: product.sc_name,
+          description: product.sc_description,
+        };
+        product.category = {
+          id: product.c_id,
+          name: product.c_name,
+          description: product.c_description,
+        };
+
+        // Clean up redundant fields
+        delete product.sc_id;
+        delete product.sc_name;
+        delete product.sc_description;
+        delete product.c_id;
+        delete product.c_name;
+        delete product.c_description;
+
+        return product;
+      }));
+
+      resp = {
+        status: true,
+        message: `Products Retrieved Successfully for Search Term "${searchTerm}"`,
+        data: productsWithDetails,
+      };
+    } else {
+      resp = { status: false, error: "No products found matching the search term" };
     }
   } catch (error) {
     resp = { status: false, error: error.message };
