@@ -44,6 +44,7 @@ app.post("/upload", upload.single("file"), async (req, res) => {
 app.use("/materialmartapi/common", require("./services/commonservice"));
 app.use("/materialmartapi/auth", require("./services/auth_service"));
 app.use("/materialmartapi/customer", require("./services/customerservices"));
+app.use("/materialmartapi/deliveryPartner", require("./services/delivery_partner_services"));
 app.use("/materialmartapi/addresses", require("./services/addresses_service"));
 app.use("/materialmartapi/categories", require("./services/category_services"));
 app.use(
