@@ -105,10 +105,13 @@ async function getAllItems(tableName) {
   }
 }
 
-async function getAllItemsByID(tableName, colName, colValue) {
+async function getAllItemsByID(tableName, colName, colValue, addOrderBy = false) {
   try {
-    const queryText =
+    var queryText =
       "SELECT * FROM " + tableName + " WHERE " + colName + " = " + colValue;
+    if (addOrderBy) {
+      queryText += " ORDER BY id DESC";
+    }
     const result = await sqlTransaction(queryText, "");
     var resultArray = await transformColumns(tableName, result);
     return resultArray;
