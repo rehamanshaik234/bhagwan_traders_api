@@ -88,7 +88,6 @@ module.exports = (socket, io) => {
         console.log('Order update received:', data);
         const orderId = data.orderId;
         const updateData = {
-            order_id: orderId,
             latitude: data.latitude,
             longitude: data.longitude,
             status: data.status,
@@ -114,7 +113,6 @@ module.exports = (socket, io) => {
         console.log('Order status update received:', data);
         const orderId = data.orderId;
         const updateData = {
-            order_id: orderId,
             status: data.status,
         };
         const result = await fndb.updateItem(
