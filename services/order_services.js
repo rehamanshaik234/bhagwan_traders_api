@@ -107,7 +107,8 @@ async function ordersByStatus(req, res) {
     LEFT JOIN ${tableNames.delivery_partner} ON orders.delivery_partner_id = delivery_partner.id
     LEFT JOIN ${tableNames.addresses} ON orders.address_id = addresses.id
     LEFT JOIN ${tableNames.customer_gsts} ON orders.customer_gst_id = customer_gsts.id
-    WHERE orders.status = ?`, [status]);
+    WHERE orders.status = ?
+    ORDER BY orders.id DESC`, [status]);
     if (result != null) {
       result = result.map(order => {
         order.customer = JSON.parse(order.customer);
