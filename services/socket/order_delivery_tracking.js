@@ -8,6 +8,19 @@ module.exports = (socket, io) => {
     console.log('Getting order details for:', data);
     socket.orderId = data.orderId;
     socket.join(`${data.orderId}`);
+    if(data.pickOrder) {
+      const orderId = data.orderId;
+        var updateData = {
+          ...data,
+          status: 'Picked',
+        };
+        delete updateData.orderId; // Remove orderId from updateData
+        const result = await fndb.updateItem(
+          tableNames.orders,
+          orderId,
+          updateData
+        );
+    }
     var result={};
     const query = `SELECT 
                         ${tableNames.orders}.id AS id,
@@ -77,11 +90,12 @@ module.exports = (socket, io) => {
     if (result) {
       socket.emit('order_details', {
         data: result,
-        message: 'Order details retrieved successfully',
+        message: data.pickOrder ? 'Order Picked successfully' : 'Order details retrieved successfully',
         timestamp: new Date()
       });
     }
-  }});
+  }
+});
 
     // Handle order updates
   socket.on('update_location', async(data) => {
@@ -109,12 +123,40 @@ module.exports = (socket, io) => {
         }
     });
 
+  socket.on('unpick_order', async(data) => {
+    console.log('Order unpicked:', data);
+    const orderId = data.orderId;
+    var updateData = {
+      ...data,
+      status: 'Dispatched',
+    };
+    delete updateData.orderId; // Remove orderId from updateData
+    const result = await fndb.updateItem(
+      tableNames.orders,
+      orderId,
+      updateData
+    );
+    if (result) {
+      console.log('Order unpicked successfully:', result);
+      socket.leave(`${orderId}`); // Leave the room for this order
+      io.to(`${orderId}`).emit('unpicked_order', {
+        orderId: orderId,
+        status: 'Dispatched',
+        data: updateData,
+        message: 'Order has been unpicked',
+        timestamp: new Date()
+      });
+    }
+  });
+
   socket.on('update_order_status', async(data) => {
         console.log('Order status update received:', data);
         const orderId = data.orderId;
         const updateData = {
+            ...data,
             status: data.status,
         };
+        delete updateData.orderId; // Remove orderId from updateData
         const result = await fndb.updateItem(
             tableNames.orders,
             orderId,
@@ -126,6 +168,7 @@ module.exports = (socket, io) => {
             io.to(`${orderId}`).emit('order_details', {
                 orderId: orderId,
                 status: data.status,
+                data: updateData,
                 message: 'Order status updated successfully',
                 timestamp: new Date()
             });

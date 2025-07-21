@@ -9,6 +9,8 @@ router.post("/placeOrder", [authenticateToken.validJWTNeeded, placeOrder]);
 router.post("/allOrders", [authenticateToken.validJWTNeeded, allOrders]);
 router.post("/ordersbyStatus", [authenticateToken.validJWTNeeded, ordersByStatus]);
 router.post("/updateOrder", [authenticateToken.validJWTNeeded, updateOrder]);
+router.post("/getPickedOrders", [authenticateToken.validJWTNeeded, getPickedOrders]);
+
 
 //status: Preparing, Dispatched, Picked, OutForDelivery, Delivered, Cancelled, Returned
 async function placeOrder(req, res) {
@@ -205,6 +207,51 @@ async function updateOrder(req, res) {
     }
   } catch (error) {
     resp = { status: false, error: error };
+  }
+  return res.send(resp);
+}
+
+
+async function getPickedOrders(req, res) {
+  var resp = new Object();
+  try {
+    var result = await fndb.customQuery(`
+      SELECT 
+        orders.id,
+        orders.customer_id,
+        orders.delivery_partner_id,
+        orders.address_id,
+        orders.status,
+        orders.total_amount,
+        orders.created_at,
+        JSON_OBJECT('id', customers.id, 'name', customers.name, 'number', customers.number, 'fcm_token', customers.fcm_token) AS customer,
+        JSON_OBJECT('id', delivery_partner.id, 'name', delivery_partner.name, 'number', delivery_partner.number, 'fcm_token', delivery_partner.fcm_token) AS delivery_partner,
+        JSON_OBJECT('id', customer_gsts.id, 'gst_number', customer_gsts.gst_number, 'shop_name', customer_gsts.shop_name, 'gst_address', customer_gsts.gst_address) AS customer_gst,
+        JSON_OBJECT('id', addresses.id, 'address_line', addresses.address_line, 'city', addresses.city, 'state', addresses.state, 'postal_code', addresses.postal_code, 'latitude', addresses.latitude, 'longitude', addresses.longitude, 'house_number', addresses.house_number, 'building_name', addresses.building_name) AS address
+      FROM ${tableNames.orders}
+      LEFT JOIN ${tableNames.customers} ON orders.customer_id = customers.id
+      LEFT JOIN ${tableNames.delivery_partner} ON orders.delivery_partner_id = delivery_partner.id
+      LEFT JOIN ${tableNames.addresses} ON orders.address_id = addresses.id
+      LEFT JOIN ${tableNames.customer_gsts} ON orders.customer_gst_id = customer_gsts.id
+      WHERE orders.status = ? AND delivery_partner.id = ?
+      ORDER BY orders.created_at DESC`, [req.body.status || "Picked", req.body.deliveryPartnerId]);
+
+    if (result && result.length > 0) {
+      result.forEach(order => {
+        order.customer = JSON.parse(order.customer);
+        order.delivery_partner = JSON.parse(order.delivery_partner);
+        order.address = JSON.parse(order.address);
+        order.customer_gst = JSON.parse(order.customer_gst);
+      });
+    }
+    resp.result = result;
+    resp.success = true;
+    resp.message = "All data";
+  } catch (err) {
+    fnCommon.logErrorMsg("Order Service - getPickedOrders", req, err.message);
+    resp.result = null;
+    resp.success = false;
+    resp.message = "Error: Error in getting information";
   }
   return res.send(resp);
 }
