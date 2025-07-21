@@ -29,6 +29,7 @@ module.exports=(socket, io)=>{
               updateData
           );
           if(result) {
+            console.log('Order updated successfully:', result);
             var updatedOrder = await fndb.customQuery(`
                       SELECT 
                         orders.id,
@@ -57,11 +58,11 @@ module.exports=(socket, io)=>{
                       updatedOrder.delivery_partner = JSON.parse(updatedOrder.delivery_partner);
                       updatedOrder.address = JSON.parse(updatedOrder.address);
                       updatedOrder.customer_gst = JSON.parse(updatedOrder.customer_gst);
-                      updatedOrder.status = status; // Update the status in the response
+                      updatedOrder.status = data.status; // Update the status in the response
                       // Get order items
                       const orderItems = await fndb.customQuery(`SELECT order_items.id AS id, order_items.quantity, order_items.price,
                             JSON_OBJECT( 'id', products.id, 'name', products.name, 'description', products.description, 'image_url',products.image_url, 'price',products.price, 'is_active',products.is_active, 'stock',products.stock, 'sub_category_id',products.sub_category_id ) AS product FROM order_items 
-                            LEFT JOIN products ON order_items.product_id = products.id WHERE order_items.order_id = ?`, [order_id]);
+                            LEFT JOIN products ON order_items.product_id = products.id WHERE order_items.order_id = ?`, [orderId]);
                       
                       if (orderItems && orderItems.length > 0) {
                         orderItems.forEach(item => {
