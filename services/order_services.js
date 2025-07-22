@@ -233,8 +233,8 @@ async function getPickedOrders(req, res) {
       LEFT JOIN ${tableNames.delivery_partner} ON orders.delivery_partner_id = delivery_partner.id
       LEFT JOIN ${tableNames.addresses} ON orders.address_id = addresses.id
       LEFT JOIN ${tableNames.customer_gsts} ON orders.customer_gst_id = customer_gsts.id
-      WHERE orders.status = ? AND delivery_partner.id = ?
-      ORDER BY orders.created_at DESC`, [req.body.status || "Picked", req.body.deliveryPartnerId]);
+      WHERE orders.status IN (?) AND delivery_partner.id = ?
+      ORDER BY orders.created_at DESC`, [[...req.body.status, 'Picked'], req.body.deliveryPartnerId]);
 
     if (result && result.length > 0) {
       result.forEach(order => {
