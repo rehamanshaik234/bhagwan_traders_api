@@ -45,6 +45,7 @@ module.exports = (socket, io) => {
                             'gst_address', ${tableNames.customer_gsts}.gst_address,
                             'address_id', ${tableNames.customer_gsts}.address_id
                         ) AS customer_gst,
+                        JSON_OBJECT('id', customers.id, 'name', customers.name, 'number', customers.number, 'fcm_token', customers.fcm_token) AS customer,
                         JSON_OBJECT(
                             'id', ${tableNames.addresses}.id,
                             'customer_id', ${tableNames.addresses}.customer_id,
@@ -68,12 +69,14 @@ module.exports = (socket, io) => {
                     LEFT JOIN ${tableNames.customer_gsts} ON ${tableNames.orders}.customer_gst_id = ${tableNames.customer_gsts}.id
                     LEFT JOIN ${tableNames.addresses} ON ${tableNames.orders}.address_id = ${tableNames.addresses}.id
                     LEFT JOIN ${tableNames.delivery_partner} ON ${tableNames.orders}.delivery_partner_id = ${tableNames.delivery_partner}.id
+                    LEFT JOIN ${tableNames.customers} ON orders.customer_id = customers.id
                     WHERE ${tableNames.orders}.id = ?;
                     `;
     var orderDetails= await fndb.customQuery(query, [data.orderId]);
     if (orderDetails && orderDetails.length > 0) {
       orderDetails = orderDetails[0]
       orderDetails.customer_gst = JSON.parse(orderDetails.customer_gst);
+      orderDetails.customer = JSON.parse(orderDetails.customer);
       orderDetails.address = JSON.parse(orderDetails.address);
       orderDetails.delivery_partner = JSON.parse(orderDetails.delivery_partner);
       const orderItems= await fndb.customQuery(`SELECT order_items.id AS id, order_items.quantity, order_items.price,
