@@ -83,11 +83,9 @@ module.exports = (socket, io) => {
         orderItems.forEach(item => {
           item.product = JSON.parse(item.product);
         });
+        orderDetails.order_items = orderItems;
       }
-       result = { 
-          order: orderDetails,
-          order_items: orderItems
-        };
+       result = orderDetails;
     if (result) {
       socket.emit('order_details', {
         data: result,
@@ -140,7 +138,7 @@ module.exports = (socket, io) => {
     if (result) {
       console.log('Order unpicked successfully:', result);
       socket.leave(`${orderId}`); // Leave the room for this order
-      io.to(`${orderId}`).emit('unpicked_order', {
+      socket.to(`${orderId}`).emit('unpicked_order', {
         orderId: orderId,
         status: 'Dispatched',
         data: updateData,
