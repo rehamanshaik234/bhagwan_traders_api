@@ -87,7 +87,7 @@ module.exports = (socket, io) => {
       }
        result = orderDetails;
     if (result) {
-      socket.emit('order_details', {
+      io.to(`${data.orderId}`).emit('order_details', {
         data: result,
         message: data.pickOrder ? 'Order Picked successfully' : 'Order details retrieved successfully',
         timestamp: new Date()
@@ -138,7 +138,7 @@ module.exports = (socket, io) => {
     if (result) {
       console.log('Order unpicked successfully:', result);
       socket.leave(`${orderId}`); // Leave the room for this order
-      socket.to(`${orderId}`).emit('unpicked_order', {
+      io.to(`${orderId}`).emit('unpicked_order', {
         orderId: orderId,
         status: 'Dispatched',
         data: updateData,
