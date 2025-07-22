@@ -14,6 +14,7 @@ module.exports = (socket, io) => {
           ...data,
           status: 'Picked',
         };
+        delete updateData.pickOrder;
         delete updateData.orderId; // Remove orderId from updateData
         const result = await fndb.updateItem(
           tableNames.orders,
