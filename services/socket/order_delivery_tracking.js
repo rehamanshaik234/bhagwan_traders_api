@@ -87,11 +87,19 @@ module.exports = (socket, io) => {
       }
        result = orderDetails;
     if (result) {
-      io.to(`${data.orderId}`).emit('order_details', {
-        data: result,
-        message: data.pickOrder ? 'Order Picked successfully' : 'Order details retrieved successfully',
-        timestamp: new Date()
-      });
+      if(data.pickOrder) {
+        io.to(`${data.orderId}`).emit('order_details', {
+          data: result,
+          message: 'Order Picked successfully',
+          timestamp: new Date()
+        });
+      } else {
+        socket.emit('order_details', {
+          data: result,
+          message: 'Order details retrieved successfully',
+          timestamp: new Date()
+        });
+      }
     }
   }
 });
