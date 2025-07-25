@@ -14,6 +14,10 @@ router.get("/allProducts", [authenticateToken.validJWTNeeded, getAllProducts]);
 // Function to get products by subcategory ID
 router.get("/productsBySubCategoryId", [authenticateToken.validJWTNeeded, getProductsBySubCategoryId]);
 router.get("/searchProducts", [authenticateToken.validJWTNeeded, searchProducts]);
+router.post("/topFeaturedProducts", [authenticateToken.validJWTNeeded, getTopFeaturedProducts]);
+router.post("/bestSellerProducts", [authenticateToken.validJWTNeeded, getBestSellerProducts]);
+router.post("/similarProducts", [authenticateToken.validJWTNeeded, getSimilarProducts]);
+
 
 
 
@@ -318,6 +322,218 @@ async function searchProducts(req, res) {
 
   return res.send(resp);
 }
+
+async function getTopFeaturedProducts(req, res) {
+  const {category_id} = req.body;
+
+  let resp = {};
+  try {
+    // Fetch top featured products for the given category
+    const result = await fndb.customQuery(`
+      SELECT 
+        p.*,
+        sc.id AS sc_id,
+        sc.name AS sc_name,
+        sc.description AS sc_description,
+        c.id AS c_id,
+        c.name AS c_name,
+        c.description AS c_description
+      FROM products p
+      LEFT JOIN sub_categories sc ON p.sub_category_id = sc.id
+      LEFT JOIN categories c ON sc.category_id = c.id
+      WHERE p.is_active = 1 
+      AND c.id = ?
+      AND p.is_featured = 1
+    `, [category_id]);
+
+    if (result && result.length > 0) {
+      const productsWithDetails = await Promise.all(result.map(async (product) => {
+        // Get images for each product
+        const images = await fndb.getAllItemsByID(tableNames.product_images, "product_id", product.id);
+        product.image_urls = images.map(image => image.image_url);
+
+        // Structure nested sub_category and category
+        product.sub_category = {
+          id: product.sc_id,
+          name: product.sc_name,
+          description: product.sc_description,
+        };
+        product.category = {
+          id: product.c_id,
+          name: product.c_name,
+          description: product.c_description,
+        };
+
+        // Clean up redundant fields
+        delete product.sc_id;
+        delete product.sc_name;
+        delete product.sc_description;
+        delete product.c_id;
+        delete product.c_name;
+        delete product.c_description;
+
+        return product;
+      }));
+
+      resp = {
+        status: true,
+        message: `Top Featured Products Retrieved Successfully for Category ID ${category_id}`,
+        data: productsWithDetails,
+      };
+    } else {
+      resp = { status: false, error: "No featured products found for given category" };
+    }
+  } catch (error) {
+    resp = { status: false, error: error.message };
+  }
+
+  return res.send(resp);
+}
+
+async function getBestSellerProducts(req, res) {
+  const {category_id} = req.body;
+
+  let resp = {};
+  try {
+    // Fetch top featured products for the given category
+    const result = await fndb.customQuery(`
+      SELECT 
+        p.*,
+        sc.id AS sc_id,
+        sc.name AS sc_name,
+        sc.description AS sc_description,
+        c.id AS c_id,
+        c.name AS c_name,
+        c.description AS c_description
+      FROM products p
+      LEFT JOIN sub_categories sc ON p.sub_category_id = sc.id
+      LEFT JOIN categories c ON sc.category_id = c.id
+      WHERE p.is_active = 1 
+      AND c.id = ?
+      AND p.is_featured = 1
+    `, [category_id]);
+
+    if (result && result.length > 0) {
+      const productsWithDetails = await Promise.all(result.map(async (product) => {
+        // Get images for each product
+        const images = await fndb.getAllItemsByID(tableNames.product_images, "product_id", product.id);
+        product.image_urls = images.map(image => image.image_url);
+
+        // Structure nested sub_category and category
+        product.sub_category = {
+          id: product.sc_id,
+          name: product.sc_name,
+          description: product.sc_description,
+        };
+        product.category = {
+          id: product.c_id,
+          name: product.c_name,
+          description: product.c_description,
+        };
+
+        // Clean up redundant fields
+        delete product.sc_id;
+        delete product.sc_name;
+        delete product.sc_description;
+        delete product.c_id;
+        delete product.c_name;
+        delete product.c_description;
+
+        return product;
+      }));
+
+      resp = {
+        status: true,
+        message: `Top Featured Products Retrieved Successfully for Category ID ${category_id}`,
+        data: productsWithDetails,
+      };
+    } else {
+      resp = { status: false, error: "No featured products found for given category" };
+    }
+  } catch (error) {
+    resp = { status: false, error: error.message };
+  }
+
+  return res.send(resp);
+}
+
+async function getSimilarProducts(req, res) {
+  const {product_id} = req.body;
+  let resp = {};
+  try {
+    // Fetch similar products based on sub_category_id of the given product
+    const product = await fndb.getItemById(tableNames.products, product_id);
+    if (!product) {
+      return res.status(404).send({ status: false, error: "Product not found" });
+    }
+
+    const result = await fndb.customQuery(`
+      SELECT 
+        p.*,
+        sc.id AS sc_id,
+        sc.name AS sc_name,
+        sc.description AS sc_description,
+        c.id AS c_id,
+        c.name AS c_name,
+        c.description AS c_description
+      FROM products p
+      LEFT JOIN sub_categories sc ON p.sub_category_id = sc.id
+      LEFT JOIN categories c ON sc.category_id = c.id
+      WHERE p.is_active = 1 
+      AND p.sub_category_id = ?
+      AND p.id != ?
+    `, [product.sub_category_id, product_id]);
+
+    if (result && result.length > 0) {
+      const productsWithDetails = await Promise.all(result.map(async (product) => {
+        // Get images for each product
+        if(product.id === product_id) {
+          return null; // Skip the product itself
+        }
+        if(!product) return null; // Handle case where product is null
+
+        const images = await fndb.getAllItemsByID(tableNames.product_images, "product_id", product.id);
+        product.image_urls = images.map(image => image.image_url);
+
+        // Structure nested sub_category and category
+        product.sub_category = {
+          id: product.sc_id,
+          name: product.sc_name,
+          description: product.sc_description,
+        };
+        product.category = {
+          id: product.c_id,
+          name: product.c_name,
+          description: product.c_description,
+        };
+
+        // Clean up redundant fields
+        delete product.sc_id;
+        delete product.sc_name;
+        delete product.sc_description;
+        delete product.c_id;
+        delete product.c_name;
+        delete product.c_description;
+
+        return product;
+      }));
+
+      resp = {
+        status: true,
+        message: `Similar Products Retrieved Successfully for Product ID ${product_id}`,
+        data: productsWithDetails,
+      };
+    } else {
+      resp = { status: false, error: "No similar products found" };
+    }
+  } catch (error) {
+    resp = { status: false, error: error.message }; 
+}
+
+  return res.send(resp);
+}
+
+
 
 
 
