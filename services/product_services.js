@@ -342,9 +342,7 @@ async function getTopFeaturedProducts(req, res) {
       LEFT JOIN sub_categories sc ON p.sub_category_id = sc.id
       LEFT JOIN categories c ON sc.category_id = c.id
       WHERE p.is_active = 1 
-      AND c.id = ?
-      AND p.is_featured = 1
-    `, [category_id]);
+      AND c.id = ?`, [category_id]);
 
     if (result && result.length > 0) {
       const productsWithDetails = await Promise.all(result.map(async (product) => {
@@ -409,9 +407,7 @@ async function getBestSellerProducts(req, res) {
       LEFT JOIN sub_categories sc ON p.sub_category_id = sc.id
       LEFT JOIN categories c ON sc.category_id = c.id
       WHERE p.is_active = 1 
-      AND c.id = ?
-      AND p.is_featured = 1
-    `, [category_id]);
+      AND c.id = ?`, [category_id]);
 
     if (result && result.length > 0) {
       const productsWithDetails = await Promise.all(result.map(async (product) => {
