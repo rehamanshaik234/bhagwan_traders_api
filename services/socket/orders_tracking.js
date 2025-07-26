@@ -5,12 +5,10 @@ const tableColumns = require("../../helpers/tableColumns");
 module.exports=(socket, io)=>{
   // Handle user authentication/login
   socket.on('create_order', async(data) => {
-    console.log('Creating order for:', data);
-    const result= await fndb.addNewItem(tableNames.orders, data);
-    if (result && result > 0 ) {
+    if (data && data.order_id) {
        io.emit('new_order', {
-        order: result,
-        message: 'Order created successfully',
+        data: data,
+        message: 'New Order Received',
         timestamp: new Date()
       });
     }
@@ -84,6 +82,7 @@ module.exports=(socket, io)=>{
               
           }
       }); 
+
 
   socket.on('disconnect', () => {
     console.log('User disconnected');
