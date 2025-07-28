@@ -6,7 +6,15 @@ const path = require("path");
 require("dotenv").config();
 const { connection, pool } = require("./helpers/mySQLConnector");
 const { upload } = require("./helpers/fileupload");
-const  SocketIO= require("socket.io");
+const  SocketIO= require("socket.io")(server, {
+  cors: {
+    origin: "https://materialmart.shop",
+    methods: ["GET", "POST"],
+    credentials: true
+  },
+  // If you're using a custom path
+  path: '/socket.io' 
+});
 const order_tracking = require("./services/socket/orders_tracking");
 const order_delivery_tracking = require("./services/socket/order_delivery_tracking");
 const { GoogleAuth } = require("google-auth-library");
