@@ -6,7 +6,13 @@ const path = require("path");
 require("dotenv").config();
 const { connection, pool } = require("./helpers/mySQLConnector");
 const { upload } = require("./helpers/fileupload");
-const  SocketIO= require("socket.io")(server, {
+const  SocketIO= require("socket.io");
+const order_tracking = require("./services/socket/orders_tracking");
+const order_delivery_tracking = require("./services/socket/order_delivery_tracking");
+const { GoogleAuth } = require("google-auth-library");
+const { getAccessToken } = require("./helpers/google_token_service");
+var server = http.createServer(app);
+const io = SocketIO(server,{
   cors: {
     origin: "https://materialmart.shop",
     methods: ["GET", "POST"],
@@ -15,12 +21,6 @@ const  SocketIO= require("socket.io")(server, {
   // If you're using a custom path
   path: '/socket.io' 
 });
-const order_tracking = require("./services/socket/orders_tracking");
-const order_delivery_tracking = require("./services/socket/order_delivery_tracking");
-const { GoogleAuth } = require("google-auth-library");
-const { getAccessToken } = require("./helpers/google_token_service");
-var server = http.createServer(app);
-const io = SocketIO(server);
 
 
 app.use(express.json({ limit: "50mb" }));
