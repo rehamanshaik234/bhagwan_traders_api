@@ -39,6 +39,20 @@ app.post("/upload", upload.single("file"), async (req, res) => {
   }
 });
 
+//akshay services
+app.use("/materialmartapi/dashboard/common", require("./services/dashboard/commonservice"));
+app.use("/materialmartapi/dashboard/auth", require("./services/dashboard/auth_service"));
+app.use("/materialmartapi/dashboard/customer", require("./services/dashboard/customerservices"));
+app.use("/materialmartapi/dashboard/user", require("./services/dashboard/userservice"));
+app.use("/materialmartapi/dashboard/orders", require("./services/dashboard/orders_service"));
+app.use("/materialmartapi/dashboard/products", require("./services/dashboard/product_services"));
+app.use("/materialmartapi/dashboard/sales", require("./services/dashboard/sale_service"));
+app.use("/materialmartapi/dashboard/categories", require("./services/dashboard/category_service"));
+app.use(
+  "/materialmartapi/dashboard/subcategories",
+  require("./services/dashboard/sub_category_services")
+);
+
 
 // api routes
 app.use("/materialmartapi/common", require("./services/commonservice"));
