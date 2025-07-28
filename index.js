@@ -30,7 +30,7 @@ app.use(
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.use(cors());
 
-app.get("/materialmartapi/", (req, res) => {
+app.get("/", (req, res) => {
   return res.json({ message: "GPS Tracking API Service" });
 });
 
