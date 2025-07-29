@@ -12,15 +12,7 @@ const order_delivery_tracking = require("./services/socket/order_delivery_tracki
 const { GoogleAuth } = require("google-auth-library");
 const { getAccessToken } = require("./helpers/google_token_service");
 var server = http.createServer(app);
-const io = SocketIO(server,{
-  cors: {
-    origin: "https://materialmart.shop",
-    methods: ["GET", "POST"],
-    credentials: true
-  },
-  // If you're using a custom path
-  path: '/socket.io' 
-});
+const io = SocketIO(server);
 
 
 app.use(express.json({ limit: "50mb" }));
