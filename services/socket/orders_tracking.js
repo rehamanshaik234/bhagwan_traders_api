@@ -37,6 +37,7 @@ module.exports=(socket, io)=>{
                         orders.status,
                         orders.total_amount,
                         orders.created_at,
+                        orders.updated_at,
                         JSON_OBJECT('id', customers.id, 'name', customers.name, 'number', customers.number, 'fcm_token', customers.fcm_token) AS customer,
                         JSON_OBJECT('id', delivery_partner.id, 'name', delivery_partner.name, 'number', delivery_partner.number, 'fcm_token', delivery_partner.fcm_token) AS delivery_partner,
                         JSON_OBJECT('id', customer_gsts.id, 'gst_number', customer_gsts.gst_number, 'shop_name', customer_gsts.shop_name, 'gst_address', customer_gsts.gst_address) AS customer_gst,

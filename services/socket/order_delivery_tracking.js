@@ -31,6 +31,7 @@ module.exports = (socket, io) => {
                         ${tableNames.orders}.delivery_partner_id,
                         ${tableNames.orders}.status,
                         ${tableNames.orders}.created_at,
+                        ${tableNames.orders}.updated_at,
                         ${tableNames.orders}.total_amount,
                         ${tableNames.orders}.shipping_address,
                         ${tableNames.orders}.delivery_charges,

@@ -57,7 +57,7 @@ async function allOrders(req, res) {
   var resp = new Object();
   const { customer_id, status} = req.body;
   try {
-    var result = await fndb.getAllItemsByID(tableNames.orders, OrderCols.customer_id, customer_id, true);
+    var result = await fndb.getAllItemsByID(tableNames.orders, OrderCols.customer_id, customer_id, true,true);
     if (status) {
       result = result.filter(order => order.status === status);
     }
@@ -100,6 +100,7 @@ async function ordersByStatus(req, res) {
       orders.status,
       orders.total_amount,
       orders.created_at,
+      orders.updated_at,
       JSON_OBJECT('id', customers.id, 'name', customers.name, 'number', customers.number, 'fcm_token', customers.fcm_token) AS customer,
       JSON_OBJECT('id', delivery_partner.id, 'name', delivery_partner.name, 'number', delivery_partner.number, 'fcm_token', delivery_partner.fcm_token) AS delivery_partner,
       JSON_OBJECT('id', customer_gsts.id, 'gst_number', customer_gsts.gst_number, 'shop_name', customer_gsts.shop_name, 'gst_address', customer_gsts.gst_address) AS customer_gst,
@@ -110,7 +111,7 @@ async function ordersByStatus(req, res) {
     LEFT JOIN ${tableNames.addresses} ON orders.address_id = addresses.id
     LEFT JOIN ${tableNames.customer_gsts} ON orders.customer_gst_id = customer_gsts.id
     WHERE orders.status = ?
-    ORDER BY orders.id DESC`, [status]);
+    ORDER BY orders.updated_at DESC`, [status]);
     if (result != null) {
       result = result.map(order => {
         order.customer = JSON.parse(order.customer);
@@ -163,6 +164,7 @@ async function updateOrder(req, res) {
           orders.status,
           orders.total_amount,
           orders.created_at,
+          orders.updated_at,
           JSON_OBJECT('id', customers.id, 'name', customers.name, 'number', customers.number, 'fcm_token', customers.fcm_token) AS customer,
           JSON_OBJECT('id', delivery_partner.id, 'name', delivery_partner.name, 'number', delivery_partner.number, 'fcm_token', delivery_partner.fcm_token) AS delivery_partner,
           JSON_OBJECT('id', customer_gsts.id, 'gst_number', customer_gsts.gst_number, 'shop_name', customer_gsts.shop_name, 'gst_address', customer_gsts.gst_address) AS customer_gst,
@@ -224,6 +226,7 @@ async function getPickedOrders(req, res) {
         orders.status,
         orders.total_amount,
         orders.created_at,
+        orders.updated_at,
         JSON_OBJECT('id', customers.id, 'name', customers.name, 'number', customers.number, 'fcm_token', customers.fcm_token) AS customer,
         JSON_OBJECT('id', delivery_partner.id, 'name', delivery_partner.name, 'number', delivery_partner.number, 'fcm_token', delivery_partner.fcm_token) AS delivery_partner,
         JSON_OBJECT('id', customer_gsts.id, 'gst_number', customer_gsts.gst_number, 'shop_name', customer_gsts.shop_name, 'gst_address', customer_gsts.gst_address) AS customer_gst,

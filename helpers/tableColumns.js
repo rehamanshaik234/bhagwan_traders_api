@@ -94,6 +94,7 @@ const OrderCols = {
   latitude: "latitude",
   longitude: "longitude",
   created_at: "created_at",
+  updated_at: "updated_at",
 };
 
 const OrderItemCols = {

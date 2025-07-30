@@ -105,12 +105,12 @@ async function getAllItems(tableName) {
   }
 }
 
-async function getAllItemsByID(tableName, colName, colValue, addOrderBy = false) {
+async function getAllItemsByID(tableName, colName, colValue, addOrderBy = false,isUpdatedAvailable = false) {
   try {
     var queryText =
       "SELECT * FROM " + tableName + " WHERE " + colName + " = " + colValue;
     if (addOrderBy) {
-      queryText += " ORDER BY id DESC";
+      queryText += ` ORDER BY ${isUpdatedAvailable ? 'updated_at' : 'id'} DESC`;
     }
     const result = await sqlTransaction(queryText, "");
     var resultArray = await transformColumns(tableName, result);
