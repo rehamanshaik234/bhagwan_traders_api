@@ -175,7 +175,7 @@ async function ordersHistory(req, res) {
     LEFT JOIN ${tableNames.delivery_partner} ON orders.delivery_partner_id = delivery_partner.id
     LEFT JOIN ${tableNames.addresses} ON orders.address_id = addresses.id
     LEFT JOIN ${tableNames.customer_gsts} ON orders.customer_gst_id = customer_gsts.id
-    WHERE orders.status IN (${status.forEach(s => `'${s}'`).join(',')})
+    WHERE orders.status IN (${status.map((s) => `'${s}'`).join(', ')})
     ${customer_id ? `AND orders.customer_id = ?` : ''}
     ${delivery_partner_id ? `AND orders.delivery_partner_id = ?` : ''}
     ORDER BY orders.updated_at DESC`, 
@@ -209,6 +209,7 @@ async function ordersHistory(req, res) {
       resp = { status: false, error: "Query execution error" };
     }
   } catch (error) {
+    console.error("Error fetching order history:", error);
     resp = { status: false, error: error };
   }
   return res.send(resp);
