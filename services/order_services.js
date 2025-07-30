@@ -10,6 +10,7 @@ router.post("/allOrders", [authenticateToken.validJWTNeeded, allOrders]);
 router.post("/ordersbyStatus", [authenticateToken.validJWTNeeded, ordersByStatus]);
 router.post("/updateOrder", [authenticateToken.validJWTNeeded, updateOrder]);
 router.post("/getPickedOrders", [authenticateToken.validJWTNeeded, getPickedOrders]);
+router.post("/ordersHistory", [authenticateToken.validJWTNeeded, ordersHistory]);
 
 
 //status: Preparing, Dispatched, Picked, OutForDelivery, Delivered, Cancelled, Returned
@@ -89,7 +90,7 @@ async function allOrders(req, res) {
 
 async function ordersByStatus(req, res) {
   var resp = new Object();
-  const { status } = req.body;
+  const { status,customer_id,delivery_partner_id } = req.body;
   try {
   var result = await fndb.customQuery(`
     SELECT 
@@ -112,7 +113,74 @@ async function ordersByStatus(req, res) {
     LEFT JOIN ${tableNames.addresses} ON orders.address_id = addresses.id
     LEFT JOIN ${tableNames.customer_gsts} ON orders.customer_gst_id = customer_gsts.id
     WHERE orders.status = ?
-    ORDER BY orders.updated_at DESC`, [status]);
+    ${customer_id ? `AND orders.customer_id = ?` : ''}
+    ${delivery_partner_id ? `AND orders.delivery_partner_id = ?` : ''}
+    ORDER BY orders.updated_at DESC`, 
+    customer_id ? [status, customer_id] :
+    delivery_partner_id ? [status, delivery_partner_id] : [status]);
+    if (result != null) {
+      result = result.map(order => {
+        order.customer = JSON.parse(order.customer);
+        order.delivery_partner = JSON.parse(order.delivery_partner);
+        order.address = JSON.parse(order.address);
+        order.customer_gst = JSON.parse(order.customer_gst);
+        return order;
+      });
+      for (let order of result) {
+        const orderItems= await fndb.customQuery(`SELECT order_items.id AS id, order_items.quantity, order_items.price,
+              JSON_OBJECT( 'id', products.id, 'name', products.name, 'description', products.description, 'image_url',products.image_url, 'price',products.price, 'is_active',products.is_active, 'stock',products.stock, 'sub_category_id',products.sub_category_id ) AS product FROM order_items 
+              LEFT JOIN products ON order_items.product_id = products.id WHERE order_items.order_id = ?`,[order.id]);
+              if (orderItems && orderItems.length > 0) {
+                orderItems.forEach(item => {
+                  item.product = JSON.parse(item.product);
+                });
+              } 
+        order.order_items = orderItems;
+      }
+      resp = {
+        status: true,
+        message: `All Orders Retrieved Successfully`,
+        data: result
+      };
+    } else {
+      resp = { status: false, error: "Query execution error" };
+    }
+  } catch (error) {
+    resp = { status: false, error: error };
+  }
+  return res.send(resp);
+}
+
+async function ordersHistory(req, res) {
+  var resp = new Object();
+  const { status,customer_id,delivery_partner_id } = req.body;
+  try {
+  var result = await fndb.customQuery(`
+    SELECT 
+      orders.id,
+      orders.customer_id,
+      orders.delivery_partner_id,
+      orders.address_id,
+      orders.status,
+      orders.total_amount,
+      orders.created_at,
+      orders.updated_at,
+      orders.shipping_address,
+      JSON_OBJECT('id', customers.id, 'name', customers.name, 'number', customers.number, 'fcm_token', customers.fcm_token) AS customer,
+      JSON_OBJECT('id', delivery_partner.id, 'name', delivery_partner.name, 'number', delivery_partner.number, 'fcm_token', delivery_partner.fcm_token) AS delivery_partner,
+      JSON_OBJECT('id', customer_gsts.id, 'gst_number', customer_gsts.gst_number, 'shop_name', customer_gsts.shop_name, 'gst_address', customer_gsts.gst_address) AS customer_gst,
+      JSON_OBJECT('id', addresses.id, 'address_line', addresses.address_line, 'city', addresses.city, 'state', addresses.state, 'postal_code', addresses.postal_code, 'latitude', addresses.latitude, 'longitude', addresses.longitude, 'house_number', addresses.house_number, 'building_name', addresses.building_name) AS address
+    FROM ${tableNames.orders}
+    LEFT JOIN ${tableNames.customers} ON orders.customer_id = customers.id
+    LEFT JOIN ${tableNames.delivery_partner} ON orders.delivery_partner_id = delivery_partner.id
+    LEFT JOIN ${tableNames.addresses} ON orders.address_id = addresses.id
+    LEFT JOIN ${tableNames.customer_gsts} ON orders.customer_gst_id = customer_gsts.id
+    WHERE orders.status IN (${status.forEach(s => `'${s}'`).join(',')})
+    ${customer_id ? `AND orders.customer_id = ?` : ''}
+    ${delivery_partner_id ? `AND orders.delivery_partner_id = ?` : ''}
+    ORDER BY orders.updated_at DESC`, 
+    customer_id ? [customer_id] :
+    delivery_partner_id ? [delivery_partner_id]:null);
     if (result != null) {
       result = result.map(order => {
         order.customer = JSON.parse(order.customer);
