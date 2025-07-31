@@ -40,7 +40,7 @@ async function addSubCategory(req, res) {
 async function getAllSubCategories(req, res) {
   var resp = new Object();
   try {
-    var result = await fndb.customQuery(tableNames.subCategories, `
+    var result = await fndb.customQuery(`
       SELECT sub_categories.*,
           JSON_OBJECT(
             'id', c.id,
