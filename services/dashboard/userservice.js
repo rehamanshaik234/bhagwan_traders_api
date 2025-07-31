@@ -196,9 +196,11 @@ async function getUsers(req, res) {
 
 async function updateUser(req, res) {
   try {
-    const result = await fndb.updateItem(tables.users, req.params.id, req.body);
+    var userData = req.body;
+    delete userData.password; // Remove password if present
+    const result = await fndb.updateItem(tables.users, req.params.id, userData);
     return res.send({
-      success: result,
+      success: result ? true : false,
       message: result ? "User updated" : "Update failed",
     });
   } catch (err) {
@@ -226,14 +228,14 @@ async function userChangePassword(req, res) {
     const { currentPassword, newPassword } = req.body;
     const user = await fndb.getItemById(tables.users, req.params.id);
 
-    if (!user || !user.password_hash) {
+    if (!user) {
       return res.status(400).send({ success: false, message: "User or password not found" });
     }
 
 
     console.log("Entered currentPassword:", currentPassword);
 
-    if (user.password_hash !== currentPassword) {
+    if (user.password !== currentPassword) {
       return res.send({ success: false, message: "Current password is incorrect" });
     }
 
@@ -257,7 +259,7 @@ async function userResetPassword(req, res) {
     const { newPassword } = req.body;
 
     const result = await fndb.updateItem(tables.users, req.params.id, {
-      [usrCols.password]: newPassword,
+      [UserCols.password]: newPassword,
     });
 
     return res.send({ success: result, message: result ? "Password reset" : "Reset failed" });
