@@ -196,7 +196,7 @@ async function getUsers(req, res) {
 
 async function updateUser(req, res) {
   try {
-    const result = await fndb.updateItem(tables.users, req.params.id, req.body);
+    const result = await fndb.updateItem(tables.users, req.query.id, req.body);
     return res.send({
       success: result,
       message: result ? "User updated" : "Update failed",
@@ -209,7 +209,7 @@ async function updateUser(req, res) {
 
 async function deleteUser(req, res) {
   try {
-    const result = await fndb.deleteItem(tables.users, req.params.id);
+    const result = await fndb.deleteItem(tables.users, req.query.id);
     if (result && result.affectedRows > 0) {
       return res.send({ success: true, message: "User deleted" });
     } else {
@@ -224,7 +224,7 @@ async function deleteUser(req, res) {
 async function userChangePassword(req, res) {
   try {
     const { currentPassword, newPassword } = req.body;
-    const user = await fndb.getItemById(tables.users, req.params.id);
+    const user = await fndb.getItemById(tables.users, req.query.id);
 
     if (!user || !user.password_hash) {
       return res.status(400).send({ success: false, message: "User or password not found" });
