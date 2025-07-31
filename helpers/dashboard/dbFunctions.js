@@ -208,8 +208,7 @@ async function addOrUpdateItem(tableName, dataId, data) {
 
 async function deleteItem(tableName, dataId) {
   try {
-    const keyCol = tablecols.getKeyColumn(tableName);
-    const queryText = `DELETE FROM ${tableName} WHERE ${keyCol} = ?`;
+    const queryText = `DELETE FROM ${tableName} WHERE id = ?`;
     const result = await sqlTransaction(queryText, [dataId]);
     return result;
   } catch (err) {

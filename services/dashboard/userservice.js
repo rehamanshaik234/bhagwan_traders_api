@@ -18,10 +18,10 @@ router.post("/registerUser", registerUser);
 router.post("/authenticate", authenticate);
 router.post("/save-fcm-token", saveFcmToken);
 router.get("/getUsers", authenticateToken.validJWTNeeded, getUsers);
-router.put("/updateUser", authenticateToken.validJWTNeeded, updateUser);
-router.delete("/deleteUser", authenticateToken.validJWTNeeded, deleteUser);
-router.put("/userChangePassword", authenticateToken.validJWTNeeded, userChangePassword);
-router.put("/userResetPassword", userResetPassword);
+router.put("/updateUser/:id", authenticateToken.validJWTNeeded, updateUser);
+router.delete("/deleteUser/:id", authenticateToken.validJWTNeeded, deleteUser);
+router.put("/userChangePassword/:id", authenticateToken.validJWTNeeded, userChangePassword);
+router.put("/userResetPassword/:id", userResetPassword);
 router.post("/addUser", authenticateToken.validJWTNeeded, addUser);
 
 module.exports = router;
@@ -196,7 +196,7 @@ async function getUsers(req, res) {
 
 async function updateUser(req, res) {
   try {
-    const result = await fndb.updateItem(tables.users, req.query.id, req.body);
+    const result = await fndb.updateItem(tables.users, req.params.id, req.body);
     return res.send({
       success: result,
       message: result ? "User updated" : "Update failed",
@@ -209,7 +209,7 @@ async function updateUser(req, res) {
 
 async function deleteUser(req, res) {
   try {
-    const result = await fndb.deleteItem(tables.users, req.query.id);
+    const result = await fndb.deleteItem(tables.users, req.params.id);
     if (result && result.affectedRows > 0) {
       return res.send({ success: true, message: "User deleted" });
     } else {
@@ -224,31 +224,21 @@ async function deleteUser(req, res) {
 async function userChangePassword(req, res) {
   try {
     const { currentPassword, newPassword } = req.body;
-    const user = await fndb.getItemById(tables.users, req.query.id);
+    const user = await fndb.getItemById(tables.users, req.params.id);
 
     if (!user || !user.password_hash) {
       return res.status(400).send({ success: false, message: "User or password not found" });
     }
 
-    const decryptedPwd = CryptoJS.AES.decrypt(
-      user.password_hash,
-      apiConfig.userpwdsecret
-    ).toString(CryptoJS.enc.Utf8);
 
-    console.log("Decrypted password:", decryptedPwd);
     console.log("Entered currentPassword:", currentPassword);
 
-    if (decryptedPwd !== currentPassword) {
+    if (user.password_hash !== currentPassword) {
       return res.send({ success: false, message: "Current password is incorrect" });
     }
 
-    const encryptedPwd = CryptoJS.AES.encrypt(
-      newPassword,
-      apiConfig.userpwdsecret
-    ).toString();
-
     const result = await fndb.updateItem(tables.users, req.params.id, {
-      password_hash: encryptedPwd,
+      password_hash: newPassword,
     });
 
     return res.send({
@@ -265,10 +255,9 @@ async function userChangePassword(req, res) {
 async function userResetPassword(req, res) {
   try {
     const { newPassword } = req.body;
-    const encryptedPwd = CryptoJS.AES.encrypt(newPassword, apiConfig.userpwdsecret).toString();
 
     const result = await fndb.updateItem(tables.users, req.params.id, {
-      [usrCols.password]: encryptedPwd,
+      [usrCols.password]: newPassword,
     });
 
     return res.send({ success: result, message: result ? "Password reset" : "Reset failed" });
