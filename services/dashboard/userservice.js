@@ -18,10 +18,10 @@ router.post("/registerUser", registerUser);
 router.post("/authenticate", authenticate);
 router.post("/save-fcm-token", saveFcmToken);
 router.get("/getUsers", authenticateToken.validJWTNeeded, getUsers);
-router.put("/updateUser/:id", authenticateToken.validJWTNeeded, updateUser);
-router.delete("/deleteUser/:id", authenticateToken.validJWTNeeded, deleteUser);
-router.put("/userChangePassword/:id", authenticateToken.validJWTNeeded, userChangePassword);
-router.put("/userResetPassword/:id", userResetPassword);
+router.put("/updateUser", authenticateToken.validJWTNeeded, updateUser);
+router.delete("/deleteUser", authenticateToken.validJWTNeeded, deleteUser);
+router.put("/userChangePassword", authenticateToken.validJWTNeeded, userChangePassword);
+router.put("/userResetPassword", userResetPassword);
 router.post("/addUser", authenticateToken.validJWTNeeded, addUser);
 
 module.exports = router;
