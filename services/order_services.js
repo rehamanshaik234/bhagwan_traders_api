@@ -18,12 +18,15 @@ async function placeOrder(req, res) {
   var resp = new Object();
   try {
     var body = req.body;
+    var productStocks= [];
     if(body.orderItem){
       for (let item of body.orderItem) {
         const product = await fndb.getItemById(tableNames.products, item.product_id);
         if (product && product.stock < item.quantity) {
           resp = { status: false, error: `Insufficient stock for product ${product.name}`, product_id: item.product_id };
           return res.send(resp);
+        }else{
+          productStocks.push({ product_id: item.product_id, available_quantity: product.stock, quantity: item.quantity });
         }
       }
     }
@@ -35,6 +38,10 @@ async function placeOrder(req, res) {
         });
         for (let item of orderItems) {
           await fndb.addNewItem(tableNames.orderItems, item);
+        }
+        // Update product stock after placing the order
+        for (let stock of productStocks) {
+          await fndb.updateItem(tableNames.products, stock.product_id, { stock: stock.available_quantity - stock.quantity });
         }
       resp = {
         status: true,
