@@ -19,8 +19,8 @@ async function placeOrder(req, res) {
   try {
     var body = req.body;
     var productStocks= [];
-    if(body.orderItem){
-      for (let item of body.orderItem) {
+    if(body.orderItems && body.orderItems.length > 0) {
+      for (let item of body.orderItems) {
         const product = await fndb.getItemById(tableNames.products, item.product_id);
         if (product && product.stock < item.quantity) {
           resp = { status: false, error: `Insufficient stock for product ${product.name}`, product_id: item.product_id };
@@ -54,6 +54,7 @@ async function placeOrder(req, res) {
       resp = { status: false, error: "Query execution error" };
     }
   } catch (error) {
+    console.error("Error placing order:", error);
     resp = { status: false, error: error };
   }
   return res.send(resp);
