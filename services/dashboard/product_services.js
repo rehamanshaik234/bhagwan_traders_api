@@ -254,6 +254,9 @@ async function addProduct(req, res) {
         `https://materialmart.shop/uploads/product/${file.filename}`
     ); // Create an array of file URLs
     var body = JSON.parse(JSON.stringify(req.body));
+    if(fileUrls.length > 0) {
+      body.image_url = fileUrls[0]; // Set the first image URL as the main image
+    }
     const result = await fndb.addNewItem(tables.products, body);
     console.log("result", result);
     if (result != null) {
