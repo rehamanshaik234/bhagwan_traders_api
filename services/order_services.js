@@ -26,7 +26,7 @@ async function placeOrder(req, res) {
           resp = { status: false, error: `Insufficient stock for product ${product.name}`, product_id: item.product_id };
           return res.send(resp);
         }else{
-          productStocks.push({ product_id: item.product_id, available_quantity: product.stock, quantity: item.quantity });
+          productStocks.push({ product_id: item.product_id, available_quantity: parseInt(`${product.stock}`), quantity: parseInt(`${item.quantity}`) });
         }
       }
     }
