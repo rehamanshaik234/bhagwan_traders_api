@@ -251,7 +251,7 @@ async function addProduct(req, res) {
     const _path = path.join(__dirname, "../../uploads/product");
     const fileUrls = req.files.map(
       (file) =>
-        `https://materialmart.shop${_path.replace("\\", "/")}/${file.filename}`
+        `https://materialmart.shop/uploads/product/${file.filename}`
     ); // Create an array of file URLs
     var body = JSON.parse(JSON.stringify(req.body));
     const result = await fndb.addNewItem(tables.products, body);

@@ -69,7 +69,7 @@ async function addCategory(req, res) {
   var resp = new Object();
   try {
     const _path = path.join(__dirname, "../../uploads/category");
-    const fileUrl = `https://materialmart.shop/uploads/subcategory/${req.file.filename}`;
+    const fileUrl = `https://materialmart.shop/uploads/category/${req.file.filename}`;
     var body = req.body;
     body.image_url = fileUrl; // Set the image URL from the uploaded file
     const result = await fndb.addNewItem(tables.categories, body);
