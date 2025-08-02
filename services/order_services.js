@@ -22,7 +22,7 @@ async function placeOrder(req, res) {
       for (let item of body.orderItem) {
         const product = await fndb.getItemById(tableNames.products, item.product_id);
         if (product && product.stock < item.quantity) {
-          resp = { status: false, error: `Insufficient stock for product ${product.name}` };
+          resp = { status: false, error: `Insufficient stock for product ${product.name}`, product_id: item.product_id };
           return res.send(resp);
         }
       }
