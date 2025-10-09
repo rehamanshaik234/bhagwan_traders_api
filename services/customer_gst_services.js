@@ -17,17 +17,21 @@ async function addGst(req, res) {
     var body = req.body;
     const result = await fndb.addNewItem(tableNames.customer_gsts, body);
     if (result != null) {
-      const customerGsts = await fndb.getAllItemsByID(tableNames.customer_gsts, CustomerGstCols.customer_id, customer_id);
+      console.log("New GST Added", result);
+      const customerGsts = await fndb.getAllItemsByID(tableNames.customer_gsts, CustomerGstCols.customer_id, body.customer_id);
+      console.log("All GSTs for Customer:", customerGsts);
       resp = {
         status: true,
         message: `GST Added Successfully`,
         data: customerGsts,
       };
+
     } else {
       resp = { status: false, error: "Query execution error" };
     }
   } catch (error) {
-    resp = { status: false, error: error };
+    console.log("Error adding GST:", error);
+    resp = { status: false, error: `${error}` };
   }
   return res.send(resp);
 }
