@@ -8,7 +8,7 @@ const { uploadProductImage, } = require("../../helpers/dashboard/fileupload.js")
 const { AddressCols } = require("../../helpers/dashboard/tableColumns.js");
 const path = require("path");
 
-router.put("/editProduct/:id", [authenticateToken.validJWTNeeded,uploadProductImage.array("files"),editProduct]);
+router.put("/editProduct/:id", [authenticateToken.validJWTNeeded,uploadProductImage.array("add_images"),editProduct]);
 router.get("/getProducts", [authenticateToken.validJWTNeeded, getProducts]);
 router.put("/updateQuantity/:id", [authenticateToken.validJWTNeeded, updateQuantity]);
 router.put("/disableProduct/:id", [authenticateToken.validJWTNeeded, toggleProductStatus]);
@@ -65,15 +65,15 @@ async function editProduct(req, res) {
   try {
     const id = req.params.id;
     var updateData = req.body;
-    const prevImages = req.body.prev_images? JSON.parse(req.body.prev_images) : [];
+    const prevImages = req.body.deleted_images? JSON.parse(req.body.deleted_images) : [];
     const newImages = req.files? req.files.map((file) =>`https://materialmart.shop/uploads/product/${file.filename}`):[];
 
     if(prevImages.length==0 && newImages.length>0){
       updateData.image_url = newImages[0];
     }
 
-    if(updateData.prev_images){
-      delete updateData.prev_images;
+    if(updateData.deleted_images){
+      delete updateData.deleted_images;
     }
     //addImages
     await Promise.all(
