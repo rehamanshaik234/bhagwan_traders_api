@@ -4,12 +4,11 @@ const authenticateToken = require("../../helpers/dashboard/authtoken.js");
 const tables = require("../../helpers/dashboard/tableNames.js");
 const fndb = require("../../helpers/dashboard/dbFunctions.js");
 const fnCommon = require("../../helpers/dashboard/commonFunctions.js");
-const { uploadProductImage } = require("../../helpers/dashboard/fileupload.js");
+const { uploadProductImage, } = require("../../helpers/dashboard/fileupload.js");
 const { AddressCols } = require("../../helpers/dashboard/tableColumns.js");
 const path = require("path");
 
-
-router.put("/editProduct/:id", [authenticateToken.validJWTNeeded, editProduct]);
+router.put("/editProduct/:id", [authenticateToken.validJWTNeeded,uploadProductImage.array("files"),editProduct]);
 router.get("/getProducts", [authenticateToken.validJWTNeeded, getProducts]);
 router.put("/updateQuantity/:id", [authenticateToken.validJWTNeeded, updateQuantity]);
 router.put("/disableProduct/:id", [authenticateToken.validJWTNeeded, toggleProductStatus]);
@@ -65,7 +64,32 @@ async function editProduct(req, res) {
   let resp = {};
   try {
     const id = req.params.id;
-    const updateData = req.body;
+    var updateData = req.body;
+    const prevImages = req.body.prev_images? JSON.parse(req.body.prev_images) : [];
+    const newImages = req.files? req.files.map((file) =>`https://materialmart.shop/uploads/product/${file.filename}`):[];
+
+    if(prevImages.length==0 && newImages.length>0){
+      updateData.image_url = newImages[0];
+    }
+
+    if(updateData.prev_images){
+      delete updateData.prev_images;
+    }
+    //addImages
+    await Promise.all(
+        newImages.map(async (url, index) => {
+          await fndb.addNewItem(tables.product_images, {
+            product_id: parseInt(id),
+            image_url: url,
+          });
+        })
+      );
+
+    await Promise.all(
+        prevImages.map(async (url, index) => {
+          await fndb.customQuery(tables.product_images,`DELETE FROM ${tables.product_images} WHERE image_url =?`,[url]);
+        })
+      );      
     const result = await fndb.updateItem(tables.products, id, updateData);
     resp.success = true;
     resp.message = "Product updated successfully";
