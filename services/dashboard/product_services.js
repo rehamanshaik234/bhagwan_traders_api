@@ -4,7 +4,7 @@ const authenticateToken = require("../../helpers/dashboard/authtoken.js");
 const tables = require("../../helpers/dashboard/tableNames.js");
 const fndb = require("../../helpers/dashboard/dbFunctions.js");
 const fnCommon = require("../../helpers/dashboard/commonFunctions.js");
-const { uploadProductImage, } = require("../../helpers/dashboard/fileupload.js");
+const { uploadProductImage,deleteProductImage } = require("../../helpers/dashboard/fileupload.js");
 const { AddressCols } = require("../../helpers/dashboard/tableColumns.js");
 const path = require("path");
 
@@ -88,6 +88,7 @@ async function editProduct(req, res) {
     await Promise.all(
         prevImages.map(async (url, index) => {
           await fndb.customQuery(tables.product_images,`DELETE FROM ${tables.product_images} WHERE image_url =?`,[url]);
+          deleteProductImage(url);
         })
       );      
     const result = await fndb.updateItem(tables.products, id, updateData);
