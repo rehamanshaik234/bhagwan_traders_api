@@ -21,6 +21,7 @@ module.exports = router;
 
 async function registerCustomer(req, res) {
   var resp = new Object();
+  fnCommon.logErrorMsg("Customer Service - RegisterCustomer", req, req.body);
   try {
     var customerData = new Object();
     var isExist = await fndb.getItemByColumn(
