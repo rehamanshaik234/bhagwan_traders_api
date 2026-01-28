@@ -82,7 +82,7 @@ async function getAllCategoriesWithSubCategories(req, res) {
         result = result.map((e) => {
           return {
             ...e,
-            sub_categories: JSON.parse(e.sub_categories).slice(0, 9)
+            sub_categories: e.sub_categories
           };
         });
         resp = {
