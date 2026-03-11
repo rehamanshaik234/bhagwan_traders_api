@@ -54,10 +54,10 @@ module.exports=(socket, io)=>{
                       updatedOrder = updatedOrder[0]; // Get the first (and only) result
                       
                       // Parse JSON objects
-                      updatedOrder.customer = JSON.parse(updatedOrder.customer);
-                      updatedOrder.delivery_partner = JSON.parse(updatedOrder.delivery_partner);
-                      updatedOrder.address = JSON.parse(updatedOrder.address);
-                      updatedOrder.customer_gst = JSON.parse(updatedOrder.customer_gst);
+                      updatedOrder.customer = (updatedOrder.customer);
+                      updatedOrder.delivery_partner = (updatedOrder.delivery_partner);
+                      updatedOrder.address = (updatedOrder.address);
+                      updatedOrder.customer_gst = (updatedOrder.customer_gst);
                       updatedOrder.status = data.status; // Update the status in the response
                       // Get order items
                       const orderItems = await fndb.customQuery(`SELECT order_items.id AS id, order_items.quantity, order_items.price,
@@ -66,7 +66,7 @@ module.exports=(socket, io)=>{
                       
                       if (orderItems && orderItems.length > 0) {
                         orderItems.forEach(item => {
-                          item.product = JSON.parse(item.product);
+                          item.product = (item.product);
                         });
                       }
 

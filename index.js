@@ -81,8 +81,9 @@ app.use("/materialmartapi/notifications", require("./services/notification_servi
 //server.listen();
 server.listen(3000, async () => {
   console.log("Listening on port 3000");
+  const connect =await connection();
+  console.log("MySQL Connected",connect);
 });
-
 io.on("connection", (socket) => { 
     order_tracking(socket, io);
     order_delivery_tracking(socket, io);

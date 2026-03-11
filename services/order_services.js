@@ -77,7 +77,7 @@ async function allOrders(req, res) {
               LEFT JOIN products ON order_items.product_id = products.id WHERE order_items.order_id = ?`,[order.id]);
               if (orderItems && orderItems.length > 0) {
                 orderItems.forEach(item => {
-                  item.product = JSON.parse(item.product);
+                  item.product = item.product;
                 });
               } 
         order.order_items = orderItems;
@@ -128,10 +128,10 @@ async function ordersByStatus(req, res) {
     delivery_partner_id ? [status, delivery_partner_id] : [status]);
     if (result != null) {
       result = result.map(order => {
-        order.customer = JSON.parse(order.customer);
-        order.delivery_partner = JSON.parse(order.delivery_partner);
-        order.address = JSON.parse(order.address);
-        order.customer_gst = JSON.parse(order.customer_gst);
+        order.customer = order.customer;
+        order.delivery_partner = order.delivery_partner;
+        order.address = order.address;
+        order.customer_gst = order.customer_gst;
         return order;
       });
       for (let order of result) {
@@ -140,7 +140,7 @@ async function ordersByStatus(req, res) {
               LEFT JOIN products ON order_items.product_id = products.id WHERE order_items.order_id = ?`,[order.id]);
               if (orderItems && orderItems.length > 0) {
                 orderItems.forEach(item => {
-                  item.product = JSON.parse(item.product);
+                  item.product = item.product;
                 });
               } 
         order.order_items = orderItems;
@@ -191,10 +191,10 @@ async function ordersHistory(req, res) {
     delivery_partner_id ? [delivery_partner_id]:null);
     if (result != null) {
       result = result.map(order => {
-        order.customer = JSON.parse(order.customer);
-        order.delivery_partner = JSON.parse(order.delivery_partner);
-        order.address = JSON.parse(order.address);
-        order.customer_gst = JSON.parse(order.customer_gst);
+        order.customer = order.customer;
+        order.delivery_partner = order.delivery_partner;
+        order.address = order.address;
+        order.customer_gst = order.customer_gst;
         return order;
       });
       for (let order of result) {
@@ -203,7 +203,7 @@ async function ordersHistory(req, res) {
               LEFT JOIN products ON order_items.product_id = products.id WHERE order_items.order_id = ?`,[order.id]);
               if (orderItems && orderItems.length > 0) {
                 orderItems.forEach(item => {
-                  item.product = JSON.parse(item.product);
+                  item.product = item.product;
                 });
               } 
         order.order_items = orderItems;
@@ -259,10 +259,10 @@ async function updateOrder(req, res) {
         updatedOrder = updatedOrder[0]; // Get the first (and only) result
         
         // Parse JSON objects
-        updatedOrder.customer = JSON.parse(updatedOrder.customer);
-        updatedOrder.delivery_partner = JSON.parse(updatedOrder.delivery_partner);
-        updatedOrder.address = JSON.parse(updatedOrder.address);
-        updatedOrder.customer_gst = JSON.parse(updatedOrder.customer_gst);
+        updatedOrder.customer = (updatedOrder.customer);
+        updatedOrder.delivery_partner = (updatedOrder.delivery_partner);
+        updatedOrder.address = (updatedOrder.address);
+        updatedOrder.customer_gst = (updatedOrder.customer_gst);
         updatedOrder.status = status; // Update the status in the response
         // Get order items
         const orderItems = await fndb.customQuery(`SELECT order_items.id AS id, order_items.quantity, order_items.price,
@@ -271,7 +271,7 @@ async function updateOrder(req, res) {
         
         if (orderItems && orderItems.length > 0) {
           orderItems.forEach(item => {
-            item.product = JSON.parse(item.product);
+            item.product = (item.product);
           });
         }
         
@@ -321,10 +321,10 @@ async function getPickedOrders(req, res) {
 
     if (result && result.length > 0) {
       result.forEach(order => {
-        order.customer = JSON.parse(order.customer);
-        order.delivery_partner = JSON.parse(order.delivery_partner);
-        order.address = JSON.parse(order.address);
-        order.customer_gst = JSON.parse(order.customer_gst);
+        order.customer = (order.customer);
+        order.delivery_partner = (order.delivery_partner);
+        order.address = (order.address);
+        order.customer_gst = (order.customer_gst);
       });
     }
     resp.result = result;
