@@ -16,8 +16,8 @@ router.post("/ordersHistory", [authenticateToken.validJWTNeeded, ordersHistory])
 //status: Preparing, Dispatched, Picked, OutForDelivery, Delivered, Cancelled, Returned
 async function placeOrder(req, res) {
   var resp = new Object();
+  const body = req.body;
   try {
-    var body = req.body;
     var productStocks= [];
     if(body.orderItems && body.orderItems.length > 0) {
       for (let item of body.orderItems) {
@@ -30,8 +30,11 @@ async function placeOrder(req, res) {
         }
       }
     }
-    const result = await fndb.addNewItem(tableNames.orders, body.order);
-    if (result != null) {
+    var orderBody = body.order;
+    delete orderBody.id;
+   
+    const result = await fndb.addNewItem(tableNames.orders, orderBody);
+        if (result != null) {
         var orderItems = body.orderItems.map(item => {
           item.order_id = result; // Associate each item with the newly created order
           return item;

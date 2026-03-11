@@ -7,11 +7,11 @@ const { AddressCols } = require("../helpers/tableColumns.js");
 const authenticateToken = require("../helpers/authtoken.js");
 const {uploadCategoryImage}= require("../helpers/fileupload.js");
 const e = require("express");
-
+const fnCommon = require("../helpers/commonFunctions.js");
 router.post("/addCategory", [authenticateToken.validJWTNeeded, uploadCategoryImage.single('file') ,addCategory]);
 router.get("/categoryById", [authenticateToken.validJWTNeeded, getCategoryById]);  
 router.get("/allCategories", [authenticateToken.validJWTNeeded, getAllCategories]);
-router.get("/allCategoriesWithSubCategories", [authenticateToken.validJWTNeeded, getAllCategoriesWithSubCategories]);
+router.get("/allCategoriesWithSubCategories", getAllCategoriesWithSubCategories);
 
 
 async function addCategory(req, res) {
@@ -78,6 +78,7 @@ async function getAllCategoriesWithSubCategories(req, res) {
         GROUP BY c.id
         ORDER BY c.created_at DESC
     `);
+    fnCommon.logErrorMsg("Customer Service - getUsers", req, result);
     if (result != null) {
         result = result.map((e) => {
           return {
@@ -94,9 +95,10 @@ async function getAllCategoriesWithSubCategories(req, res) {
       resp = { status: false, error: "Query execution error" };
     }
   } catch (error) {
+    fnCommon.logErrorMsg("Customer Service - getUsers", req, error); 
     console.log(error);
     resp = { status: false, error: error };
-  }
+ }
   return res.send(resp);
 }  
    

@@ -6,11 +6,12 @@ const fndb = require("../helpers/dbFunctions.js");
 const { AddressCols } = require("../helpers/tableColumns.js");
 const authenticateToken = require("../helpers/authtoken.js");
 const {uploadSubCategoryImage}= require("../helpers/fileupload.js");
+const fnCommon = require("../helpers/commonFunctions.js");
 
 router.post("/addSubCategory", [authenticateToken.validJWTNeeded, uploadSubCategoryImage.single('file') ,addSubCategory]);
 router.get("/subCategoryById", [authenticateToken.validJWTNeeded, getSubCategoryById]);
 router.get("/subCategoryByCategoryId", [authenticateToken.validJWTNeeded, getSubCategoryByCategoryId]);
-router.get("/allSubCategories", [authenticateToken.validJWTNeeded, getAllSubCategories]);
+router.get("/allSubCategories",[authenticateToken.validJWTNeeded,getAllSubCategories]);
 
 async function addSubCategory(req, res) {
   var resp = new Object();
@@ -52,6 +53,7 @@ async function getAllSubCategories(req, res) {
         LEFT JOIN categories AS c ON sub_categories.category_id = c.id
         ORDER BY sub_categories.created_at DESC;
         `);
+    fnCommon.logErrorMsg("Customer Service - getUsers", req, result);
     if (result != null) {
       result = result.map(item => {
       try {
@@ -67,9 +69,11 @@ async function getAllSubCategories(req, res) {
         data: result,
       };
     } else {
+      fnCommon.logErrorMsg("Customer Service - getUsers", req, "no data found");
       resp = { status: false, error: "Query execution error" };
     }
   } catch (error) {
+   fnCommon.logErrorMsg("Customer Service - getUsers", req, err.message);
     resp = { status: false, error: error };
   }
   return res.send(resp);

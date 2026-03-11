@@ -29,7 +29,7 @@ async function registerCustomer(req, res) {
       tablecols.CustomerCols.number,
       req.body.number
     );
-    if (isExist.length > 0) {
+    if (isExist && isExist.length > 0) {
       customerData = isExist[0];
     } else {
       var _result = await fndb.addNewItem(tableNames.customers, req.body);
@@ -62,7 +62,7 @@ async function registerCustomer(req, res) {
     }
   } catch (err) {
     fnCommon.logErrorMsg("Customer Service - getUsers", req, err.message);
-    resp.result = null;
+   resp.result = null;
     resp.success = false;
     resp.message = "Error: Error in getting information";
   }
