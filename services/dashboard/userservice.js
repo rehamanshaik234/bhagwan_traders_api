@@ -237,7 +237,7 @@ async function userChangePassword(req, res) {
     }
 
     const result = await fndb.updateItem(tables.users, req.params.id, {
-      password_hash: newPassword,
+      password: newPassword,
     });
 
     return res.send({
@@ -274,7 +274,7 @@ async function addUser(req, res) {
     const userObj = {
       name,
       email,
-      password_hash: password,
+      password,
       role,
       created_at: new Date()
     };
