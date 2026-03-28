@@ -4,7 +4,7 @@ const UserCols = {
   id: "id",
   name: "name",
   email: "email",
-  password_hash: "password_hash",
+  password: "password",
   role: "role",
   fcm_token: "fcm_token",
   created_at: "created_at",

@@ -57,7 +57,7 @@ async function registerUser(req, res) {
 
     const userToSave = {
       [usrCols.name]: newUser.UserName,
-      [usrCols.password_]: newUser[usrCols.password],
+      [usrCols.password]: newUser[usrCols.password],
       [usrCols.email]: newUser.email,
     };
 
