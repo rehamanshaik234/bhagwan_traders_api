@@ -51,16 +51,13 @@ async function registerUser(req, res) {
       newUser.email = `${newUser.UserName}@example.com`;
     }
 
-    newUser[usrCols.password] = CryptoJS.AES.encrypt(
-      newUser.UserPassword.toString(),
-      apiConfig.userpwdsecret
-    ).toString();
+    newUser[usrCols.password] = newUser.UserPassword.toString();
 
     delete newUser.UserPassword;
 
     const userToSave = {
       [usrCols.name]: newUser.UserName,
-      [usrCols.password]: newUser[usrCols.password],
+      [usrCols.password_]: newUser[usrCols.password],
       [usrCols.email]: newUser.email,
     };
 
