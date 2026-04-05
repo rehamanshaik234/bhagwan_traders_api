@@ -52,6 +52,10 @@ app.use(
   "/materialmartapi/dashboard/subcategories",
   require("./services/dashboard/sub_category_services")
 );
+app.use(
+  "/materialmartapi/dashboard/varianttypes",
+  require("./services/dashboard/variant_services")
+);
 
 
 // api routes

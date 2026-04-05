@@ -219,6 +219,7 @@ async function deleteItem(tableName, dataId) {
 
 async function customQuery(tableName, queryText, queryParams = "") {
   try {
+    console.log('queryText', queryText)
     const result = await sqlTransaction(queryText, queryParams);
     var resultArray = await transformColumns(tableName, result);
     if (resultArray && resultArray.length > 0) {

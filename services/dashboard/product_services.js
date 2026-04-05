@@ -68,6 +68,9 @@ async function editProduct(req, res) {
     const prevImages = req.body.deleted_images? JSON.parse(req.body.deleted_images) : [];
     const newImages = req.files? req.files.map((file) =>`https://materialmart.shop/uploads/product/${file.filename}`):[];
 
+    const deletedVariants = req.body.deleted_variants ? JSON.parse(req.body.deleted_variants) : [];
+    const newVariants = req.body.new_variants ? JSON.parse(req.body.new_variants) : [];
+
     if(prevImages.length==0 && newImages.length>0){
       updateData.image_url = newImages[0];
     }
@@ -75,6 +78,11 @@ async function editProduct(req, res) {
     if(updateData.deleted_images){
       delete updateData.deleted_images;
     }
+
+    if(updateData.deleted_variants){
+      delete updateData.deleted_variants;
+    }
+
     //addImages
     await Promise.all(
         newImages.map(async (url, index) => {
@@ -90,7 +98,28 @@ async function editProduct(req, res) {
           await fndb.customQuery(tables.product_images,`DELETE FROM ${tables.product_images} WHERE image_url =?`,[url]);
           deleteProductImage(url);
         })
-      );      
+      );
+      
+    //delete variants
+    await Promise.all(
+        deletedVariants.map(async (variantId) => {
+          await fndb.deleteItem(tables.productVariants, variantId);
+        })
+      );  
+
+    //add new variants  
+    await Promise.all(
+        newVariants.map(async (variant) => {
+          await fndb.addNewItem(tables.productVariants, {
+            product_id: parseInt(id),
+            variant_value: variant.value,
+            variant_type_id: variant.type_id,
+            stock: variant.stock,
+            additional_price: variant.additional_price,
+          });
+        })
+      );
+
     const result = await fndb.updateItem(tables.products, id, updateData);
     resp.success = true;
     resp.message = "Product updated successfully";
@@ -282,8 +311,9 @@ async function addProduct(req, res) {
     if(fileUrls.length > 0) {
       body.image_url = fileUrls[0]; // Set the first image URL as the main image
     }
+    const variants = body.variants ? JSON.parse(body.variants) : [];
+    delete body.variants; // Remove variants from main product data
     const result = await fndb.addNewItem(tables.products, body);
-    console.log("result", result);
     if (result != null) {
       body.id = result; // Get the inserted ID from the result.
       body.created_at = new Date().toISOString();
@@ -295,6 +325,18 @@ async function addProduct(req, res) {
           });
         })
       );
+      await Promise.all(
+        variants.map(async (variant) => {
+          await fndb.addNewItem(tables.productVariants, {
+            product_id: result,
+            variant_value: variant.value,
+            variant_type_id: variant.type_id,
+            stock: variant.stock,
+            additional_price: variant.additional_price,
+          });
+        })
+      );
+      body.variants = variants; // Add variants back to the response body
       body.image_urls = fileUrls; // Add the image URLs to the response body
       resp = {
         status: true,
@@ -428,6 +470,20 @@ async function getAllProducts(req, res) {
           FROM product_images pi
           WHERE pi.product_id = p.id
         ), JSON_ARRAY()) AS image_urls
+        IFNULL((
+          SELECT JSON_ARRAYAGG(
+            JSON_OBJECT(
+              'id', pv.id,
+              'variant_value', pv.variant_value,
+              'variant_type', vt.name,
+              'stock', pv.stock,
+              'additional_price', pv.additional_price
+            )
+          )
+          FROM product_variants pv
+          LEFT JOIN variant_types vt ON pv.variant_type_id = vt.id
+          WHERE pv.product_id = p.id
+        ), JSON_ARRAY()) AS variants
       FROM products p
       LEFT JOIN sub_categories sc ON p.sub_category_id = sc.id
       LEFT JOIN categories c ON sc.category_id = c.id
@@ -541,6 +597,23 @@ async function getProductById(req, res) {
         "product_id",
         productId
       );
+
+      //Get variants
+      const variants = await fndb.customQuery(
+        tables.productVariants,
+        `SELECT 
+          pv.id,
+          pv.variant_value,
+          vt.name AS variant_type,
+          pv.stock,
+          pv.additional_price
+        FROM product_variants pv
+        LEFT JOIN variant_types vt ON pv.variant_type_id = vt.id
+        WHERE pv.product_id = ?`,
+        [productId]
+      );
+
+      product.variants = variants;
       product.image_urls = images.map((image) => image.image_url);
 
       // Structure nested sub_category and category
@@ -614,6 +687,22 @@ async function getProductsBySubCategoryId(req, res) {
             product.id
           );
           product.image_urls = images.map((image) => image.image_url);
+
+          //Get variants for each product
+          const variants = await fndb.customQuery(
+            tables.productVariants,
+            `SELECT 
+              pv.id,
+              pv.variant_value,
+              vt.name AS variant_type,
+              pv.stock,
+              pv.additional_price
+            FROM product_variants pv 
+            LEFT JOIN variant_types vt ON pv.variant_type_id = vt.id
+            WHERE pv.product_id = ?`,
+            [product.id]
+          );
+          product.variants = variants;
 
           // Structure nested sub_category and category
           product.sub_category = {

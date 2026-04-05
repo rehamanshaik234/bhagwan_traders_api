@@ -101,6 +101,7 @@ const OrderItemCols = {
   id: "id",
   order_id: "order_id",
   product_id: "product_id",
+  product_variant_id: "product_variant_id",
   quantity: "quantity",
   price: "price",
 };
@@ -120,8 +121,16 @@ const ProductCols = {
 const ProductVariantCols = {
   id: "id",
   product_id: "product_id",
-  variant_name: "variant_name",
+  variant_value: "variant_value",
+  variant_type_id: "variant_type_id",
+  stock: "stock",
   additional_price: "additional_price",
+};
+
+const VariantTypeCols = {
+  id: "id",
+  name: "name",
+  created_at: "created_at",
 };
 
 const NumberOTPCols = {
@@ -192,7 +201,10 @@ function getColumns(tableName) {
       return ProductImagesCols;  
 
     case tableNames.subCategories:
-      return SubCategoryCols;  
+      return SubCategoryCols; 
+      
+    case tableNames.variantTypes:
+      return VariantTypeCols;
 
     case "":
     default:
@@ -213,7 +225,8 @@ function getColumns(tableName) {
         CustomerGstCols,
         DeliveryPartnerCols,
         ProductImagesCols,
-        SubCategoryCols
+        SubCategoryCols,
+        VariantTypeCols
       );
   }
 }
@@ -234,6 +247,7 @@ function getKeyColumn(tableName) {
   const deliveryPartnerId = "delivery_partner_id";
   const productImageId = "product_image_id";
   const subCategoryId = "sub_category_id";  
+  const variantTypeId = "variant_type_id";
 
   switch (tableName) {
     case tableNames.users:
@@ -281,6 +295,9 @@ function getKeyColumn(tableName) {
      case tableNames.subCategories:
       return subCategoryId; 
 
+     case tableNames.variantTypes:
+      return variantTypeId;
+
     default:
       return "id";
   }
@@ -303,5 +320,6 @@ module.exports = {
   CustomerGstCols,
   DeliveryPartnerCols,
   ProductImagesCols,
-  SubCategoryCols
+  SubCategoryCols,
+  VariantTypeCols
 };

@@ -12,6 +12,7 @@ module.exports = {
   orderItems: "order_items",
   products: "products",
   productVariants: "product_variants",
+  variantTypes: "variant_types",
   numberOtps: "number_otps",
   delivery_partner: "delivery_partner",
   product_images: "product_images",
