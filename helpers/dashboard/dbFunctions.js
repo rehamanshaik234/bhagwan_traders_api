@@ -14,6 +14,7 @@ module.exports = {
   customQuery,
   addOrUpdateItem,
   getAllItemsByID,
+  customQueryNoTableName,
 };
 
 async function transformColumns(tableName, result) {
@@ -233,7 +234,7 @@ async function customQuery(tableName, queryText, queryParams = "") {
   }
 }
 
-async function customQuery(queryText, queryParams = "") {
+async function customQueryNoTableName(queryText, queryParams = "") {
   try {
     const result = await sqlTransaction(queryText, queryParams);
     var resultArray = result;

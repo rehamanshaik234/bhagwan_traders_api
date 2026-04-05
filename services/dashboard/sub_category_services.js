@@ -6,6 +6,7 @@ const fndb = require("../../helpers/dashboard/dbFunctions.js");
 const { AddressCols } = require("../../helpers/dashboard/tableColumns.js");
 const authenticateToken = require("../../helpers/dashboard/authtoken.js");
 const {uploadSubCategoryImage}= require("../../helpers/dashboard/fileupload.js");
+const console = require("console");
 
 router.post("/addSubCategory", [authenticateToken.validJWTNeeded, uploadSubCategoryImage.single('file') ,addSubCategory]);
 router.get("/subCategoryById", [authenticateToken.validJWTNeeded, getSubCategoryById]);
@@ -40,7 +41,7 @@ async function addSubCategory(req, res) {
 async function getAllSubCategories(req, res) {
   var resp = new Object();
   try {
-    var result = await fndb.customQuery(`
+    var result = await fndb.customQueryNoTableName(`
       SELECT sub_categories.*,
           JSON_OBJECT(
             'id', c.id,
@@ -55,7 +56,7 @@ async function getAllSubCategories(req, res) {
     if (result != null) {
       result = result.map(item => {
       try {
-        item.category = JSON.parse(item.category || '{}');
+        item.category = item.category || '{}';
       } catch (e) {
         item.category = {};
       }
@@ -80,7 +81,7 @@ async function getSubCategoryById(req, res) {
   try {
     const id = req.query.id;
 
-    const result = await fndb.customQuery(tableNames.subCategories,`
+    const result = await fndb.customQueryNoTableName(`
       SELECT 
         sc.*, 
         JSON_OBJECT(
@@ -98,7 +99,7 @@ async function getSubCategoryById(req, res) {
       let subCategory = result[0];
 
       try {
-        subCategory.category = JSON.parse(subCategory.category || '{}');
+        subCategory.category = (subCategory.category || '{}');
       } catch (e) {
         subCategory.category = {};
       }
@@ -124,7 +125,7 @@ async function getSubCategoryByCategoryId(req, res) {
   try {
     const categoryId = req.query.categoryId;
 
-    const result = await fndb.customQuery(tableNames.subCategories,`
+    const result = await fndb.customQueryNoTableName(`
       SELECT 
         sc.*, 
         JSON_OBJECT(
@@ -140,21 +141,14 @@ async function getSubCategoryByCategoryId(req, res) {
     `, [categoryId]);
 
     if (result && result.length > 0) {
-      const formatted = result.map(item => {
-        try {
-          item.category = JSON.parse(item.category || '{}');
-        } catch (e) {
-          item.category = {};
-        }
-        return item;
-      });
-
+      const formatted = result;
       resp = {
         status: true,
         message: `Sub Categories Retrieved Successfully for Category ID ${categoryId}`,
         data: formatted,
       };
     } else {
+      console.log('No sub categories found for category ID:', result);
       resp = { status: false, error: "No Sub Categories found" };
     }
   } catch (error) {
