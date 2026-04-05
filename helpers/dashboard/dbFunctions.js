@@ -232,3 +232,19 @@ async function customQuery(tableName, queryText, queryParams = "") {
     return null;
   }
 }
+
+async function customQuery(queryText, queryParams = "") {
+  try {
+    const result = await sqlTransaction(queryText, queryParams);
+    var resultArray = result;
+    if (resultArray && resultArray.length > 0) {
+      return resultArray;
+    } else {
+      return result;
+    }
+  } catch (err) {
+    fnCommon.logErrorMsg("dbFunctions - customQuery", null, queryText);
+    fnCommon.logErrorMsg("dbFunctions - customQuery", null, err.message);
+    return null;
+  }
+}
