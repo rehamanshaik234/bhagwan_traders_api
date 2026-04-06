@@ -101,6 +101,8 @@ const OrderItemCols = {
   id: "id",
   order_id: "order_id",
   product_id: "product_id",
+  brands_id: "brands_id",
+  product_variant_id: "product_variant_id",
   quantity: "quantity",
   price: "price",
 };
@@ -110,6 +112,7 @@ const ProductCols = {
   name: "name",
   description: "description",
   brand_id: "brand_id",
+  has_brand: "has_brand", //default 0
   category_id: "category_id",
   price: "price",
   stock: "stock",
@@ -117,10 +120,27 @@ const ProductCols = {
   created_at: "created_at",
 };
 
+const ProductBrandPriceCols = {
+  id : "id",
+  product_id : "product_id",
+  brand_id : "brand_id",
+  price : "price",
+  stock : "stock",
+  created_at : "created_at"
+}
+
+const VariantCols = {
+  id: "id",
+  variant_name: "variant_name",
+  created_at: "created_at",
+}
+
 const ProductVariantCols = {
   id: "id",
   product_id: "product_id",
-  variant_name: "variant_name",
+  variant_id: "variant_id",
+  variant_value: "variant_value",
+  stock: "stock",
   additional_price: "additional_price",
 };
 
@@ -194,6 +214,12 @@ function getColumns(tableName) {
     case tableNames.subCategories:
       return SubCategoryCols;  
 
+    case tableNames.product_brand_prices:
+      return ProductBrandPriceCols;
+
+    case tableNames.variant_types:
+      return VariantCols;
+
     case "":
     default:
       return Object.assign(
@@ -213,7 +239,9 @@ function getColumns(tableName) {
         CustomerGstCols,
         DeliveryPartnerCols,
         ProductImagesCols,
-        SubCategoryCols
+        SubCategoryCols,
+        ProductBrandPriceCols,
+        VariantCols
       );
   }
 }
@@ -234,6 +262,8 @@ function getKeyColumn(tableName) {
   const deliveryPartnerId = "delivery_partner_id";
   const productImageId = "product_image_id";
   const subCategoryId = "sub_category_id";  
+  const productBrandPriceId = "product_brand_price_id";
+  const variantId = "variant_id";
 
   switch (tableName) {
     case tableNames.users:
@@ -281,6 +311,12 @@ function getKeyColumn(tableName) {
      case tableNames.subCategories:
       return subCategoryId; 
 
+     case tableNames.product_brand_prices:
+      return productBrandPriceId;
+
+     case tableNames.variant_types:
+      return variantId;
+
     default:
       return "id";
   }
@@ -303,5 +339,7 @@ module.exports = {
   CustomerGstCols,
   DeliveryPartnerCols,
   ProductImagesCols,
-  SubCategoryCols
+  SubCategoryCols,
+  ProductBrandPriceCols,
+  VariantCols
 };

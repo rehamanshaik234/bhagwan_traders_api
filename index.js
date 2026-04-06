@@ -48,6 +48,7 @@ app.use("/materialmartapi/dashboard/orders", require("./services/dashboard/order
 app.use("/materialmartapi/dashboard/products", require("./services/dashboard/product_services"));
 app.use("/materialmartapi/dashboard/sales", require("./services/dashboard/sale_service"));
 app.use("/materialmartapi/dashboard/categories", require("./services/dashboard/category_service"));
+app.use("/materialmartapi/dashboard/brands", require("./services/dashboard/brands_services"));
 app.use(
   "/materialmartapi/dashboard/subcategories",
   require("./services/dashboard/sub_category_services")

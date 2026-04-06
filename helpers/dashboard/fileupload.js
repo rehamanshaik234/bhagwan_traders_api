@@ -31,6 +31,13 @@ const productImagesStorage = multer.diskStorage({
   },
 });
 
+const brandImagesStorage = multer.diskStorage({
+  destination: path.join(__dirname, "../../../uploads/brand"), // Go one folder up
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
+  },
+});
+
 
 function deleteProductImage(fileUrl) {
   try {
@@ -55,10 +62,30 @@ function deleteProductImage(fileUrl) {
   }
 }
 
+function deleteBrandImage(fileUrl) {
+  try {
+    if (!fileUrl) return;
+    // Extract filename from URL
+    const filename = fileUrl.split("/").pop();
+    // Absolute file path in your server
+    const filePath = path.join(__dirname, "../../../uploads/brand", filename);
+    // Check if file exists, then delete
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      console.log("Deleted file:", filename);
+    } else {
+      console.log("File not found:", filename);
+    }   
+  } catch (err) {
+    console.error("Error deleting file:", err);
+  }
+}
+
 const upload = multer({ storage });
 
 const uploadCategoryImage = multer({ storage: categoryImagesStorage });
 const uploadSubCategoryImage = multer({ storage: subCategoryImagesStorage });
 const uploadProductImage = multer({ storage: productImagesStorage });
+const uploadBrandImage = multer({ storage: brandImagesStorage });
 
-module.exports = { upload, uploadCategoryImage, uploadSubCategoryImage, uploadProductImage, deleteProductImage};
+module.exports = { upload, uploadCategoryImage, uploadSubCategoryImage, uploadProductImage, deleteProductImage, uploadBrandImage, deleteBrandImage };
