@@ -25,10 +25,6 @@ async function addBrand(req, res) {
     const fileUrl = `https://materialmart.shop/uploads/brand/${req.file.filename}`;
     var body = req.body;
     body.image_url = fileUrl; // Set the image URL from the uploaded file
-    const uploadResult = await uploadBrandImage(req, res);
-    if (!uploadResult) {
-      return res.status(500).json({ status: false, error: "Image upload failed" });
-    }
     const result = await fndb.addNewItem(tables.brands, body);
     if (result != null) {
       body.id = result; // Get the inserted ID from the result
@@ -107,13 +103,6 @@ async function editBrand(req, res) {
       const oldBrand = await fndb.getItemById(tables.brands, brandId);
       if (oldBrand && oldBrand.image_url) {
         deleteBrandImage(oldBrand.image_url);
-      }
-    }
-
-    if(req.file){
-      const uploadResult = await uploadBrandImage(req, res);
-      if (!uploadResult) {
-        return res.status(500).json({ success: false, message: "Image upload failed" });
       }
     }
 
