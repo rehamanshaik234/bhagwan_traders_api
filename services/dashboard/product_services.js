@@ -60,38 +60,152 @@ function validateProduct(data) {
   return null;
 }
 
+async function getProductAssociations(productId) {
+  const [product_variants, product_brand_prices] = await Promise.all([
+    fndb.getAllItemsByID(tables.productVariants, "product_id", productId),
+    fndb.getAllItemsByID(tables.product_brand_prices, "product_id", productId),
+  ]);
+
+  return {
+    product_variants: product_variants || [],
+    product_brand_prices: product_brand_prices || [],
+  };
+}
+
 async function editProduct(req, res) {
   let resp = {};
   try {
     const id = req.params.id;
-    var updateData = req.body;
-    const prevImages = req.body.deleted_images? JSON.parse(req.body.deleted_images) : [];
-    const newImages = req.files? req.files.map((file) =>`https://materialmart.shop/uploads/product/${file.filename}`):[];
+    const { product_variants, product_brand_prices, deleted_variants, deleted_brand_prices } = req.body;
+    let updateData = JSON.parse(JSON.stringify(req.body));
+    const prevImages = req.body.deleted_images ? JSON.parse(req.body.deleted_images) : [];
+    const newImages = req.files ? req.files.map((file) => `https://materialmart.shop/uploads/product/${file.filename}`) : [];
 
-    if(prevImages.length==0 && newImages.length>0){
+    const parseJsonArray = (value) => {
+      if (value === undefined) return undefined;
+      if (Array.isArray(value)) return value;
+      if (typeof value === "string") {
+        try {
+          return JSON.parse(value);
+        } catch (e) {
+          return null;
+        }
+      }
+      return null;
+    };
+
+    const parsedVariants = parseJsonArray(product_variants);
+    const parsedBrandPrices = parseJsonArray(product_brand_prices);
+    const parsedDeletedVariants = parseJsonArray(deleted_variants);
+    const parsedDeletedBrandPrices = parseJsonArray(deleted_brand_prices);
+
+    if (prevImages.length === 0 && newImages.length > 0) {
       updateData.image_url = newImages[0];
     }
 
-    if(updateData.deleted_images){
+    if (updateData.deleted_images) {
       delete updateData.deleted_images;
     }
-    //addImages
+    if (updateData.product_variants !== undefined) {
+      delete updateData.product_variants;
+    }
+    if (updateData.product_brand_prices !== undefined) {
+      delete updateData.product_brand_prices;
+    }
+    if (updateData.deleted_variants !== undefined) {
+      delete updateData.deleted_variants;
+    }
+    if (updateData.deleted_brand_prices !== undefined) {
+      delete updateData.deleted_brand_prices;
+    }
+
+    if (updateData.stock !== undefined && updateData.stock !== "") {
+      updateData.stock = Number(updateData.stock);
+    }
+    if (updateData.price !== undefined && updateData.price !== "") {
+      updateData.price = Number(updateData.price);
+    }
+    if (updateData.brand_id !== undefined && updateData.brand_id !== "") {
+      updateData.brand_id = Number(updateData.brand_id);
+    }
+    if (updateData.category_id !== undefined && updateData.category_id !== "") {
+      updateData.category_id = Number(updateData.category_id);
+    }
+    if (updateData.sub_category_id !== undefined && updateData.sub_category_id !== "") {
+      updateData.sub_category_id = Number(updateData.sub_category_id);
+    }
+
+    // Add new images
     await Promise.all(
-        newImages.map(async (url, index) => {
-          await fndb.addNewItem(tables.product_images, {
-            product_id: parseInt(id),
-            image_url: url,
-          });
+      newImages.map(async (url) => {
+        await fndb.addNewItem(tables.product_images, {
+          product_id: parseInt(id),
+          image_url: url,
+        });
+      })
+    );
+
+    // Remove deleted images
+    await Promise.all(
+      prevImages.map(async (url) => {
+        await fndb.customQuery(
+          tables.product_images,
+          `DELETE FROM ${tables.product_images} WHERE image_url = ?`,
+          [url]
+        );
+        deleteProductImage(url);
+      })
+    );
+
+    // Update core product data
+    const result = await fndb.updateItem(tables.products, id, updateData);
+
+    // Delete specific variants if provided
+    if (parsedDeletedVariants && Array.isArray(parsedDeletedVariants)) {
+      await Promise.all(
+        parsedDeletedVariants.map(async (variantId) => {
+          await fndb.customQuery(
+            tables.productVariants,
+            `DELETE FROM ${tables.productVariants} WHERE id = ? AND product_id = ?`,
+            [variantId, id]
+          );
         })
       );
+    }
 
-    await Promise.all(
-        prevImages.map(async (url, index) => {
-          await fndb.customQuery(tables.product_images,`DELETE FROM ${tables.product_images} WHERE image_url =?`,[url]);
-          deleteProductImage(url);
+    // Add new variants if provided
+    if (parsedVariants && Array.isArray(parsedVariants)) {
+      await Promise.all(
+        parsedVariants.map(async (variant) => {
+          variant.product_id = parseInt(id);
+          await fndb.addNewItem(tables.productVariants, variant);
         })
-      );      
-    const result = await fndb.updateItem(tables.products, id, updateData);
+      );
+    }
+
+    // Delete specific brand prices if provided
+    if (parsedDeletedBrandPrices && Array.isArray(parsedDeletedBrandPrices)) {
+      await Promise.all(
+        parsedDeletedBrandPrices.map(async (priceId) => {
+          await fndb.customQuery(
+            tables.product_brand_prices,
+            `DELETE FROM ${tables.product_brand_prices} WHERE id = ? AND product_id = ?`,
+            [priceId, id]
+          );
+        })
+      );
+    }
+
+    // Add new brand prices if provided
+    if (parsedBrandPrices && Array.isArray(parsedBrandPrices)) {
+      await Promise.all(
+        parsedBrandPrices.map(async (price) => {
+          price.product_id = parseInt(id);
+          await fndb.addNewItem(tables.product_brand_prices, price);
+        })
+      );
+    }
+
     resp.success = true;
     resp.message = "Product updated successfully";
     resp.result = result;
@@ -119,9 +233,26 @@ async function getProducts(req, res) {
     const query = `SELECT * FROM ${tables.products} ${whereClause}`;
 
     const result = await fndb.customQuery(tables.products, query);
+    const finalResult = await Promise.all(
+      result.map(async (product) => {
+        const images = await fndb.getAllItemsByID(
+          tables.product_images,
+          "product_id",
+          product.id
+        );
+        const associations = await getProductAssociations(product.id);
+
+        return {
+          ...product,
+          image_urls: images.map((image) => image.image_url),
+          ...associations,
+        };
+      })
+    );
+
     resp.success = true;
     resp.message = "Products fetched successfully";
-    resp.result = result;
+    resp.result = finalResult;
   } catch (err) {
     await fnCommon.logErrorMsg("getProducts", req, err.message);
     resp.success = false;
@@ -250,7 +381,7 @@ async function enableProduct(req, res) {
   const productId = req.params.id;
 
   try {
-    const updateData = { active: 1 };
+    const updateData = { is_active : 1 };
     const updated = await fndb.updateItem(
       tables.products,
       productId,
@@ -279,14 +410,58 @@ async function addProduct(req, res) {
         `https://materialmart.shop/uploads/product/${file.filename}`
     ); // Create an array of file URLs
     var body = JSON.parse(JSON.stringify(req.body));
+    const {product_variants, product_brand_prices} = req.body;
     if(fileUrls.length > 0) {
       body.image_url = fileUrls[0]; // Set the first image URL as the main image
     }
+    if(product_variants){
+      delete body.product_variants;
+    }
+    if(product_brand_prices){
+      delete body.product_brand_prices;
+    }
+
+    // Parse product_variants if it's a string
+    let parsedVariants = product_variants;
+    if (typeof parsedVariants === 'string') {
+      try {
+        parsedVariants = JSON.parse(parsedVariants);
+      } catch (e) {
+        parsedVariants = null;
+      }
+    }
+
+    // Parse product_brand_prices if it's a string
+    let parsedBrandPrices = product_brand_prices;
+    if (typeof parsedBrandPrices === 'string') {
+      try {
+        parsedBrandPrices = JSON.parse(parsedBrandPrices);
+      } catch (e) {
+        parsedBrandPrices = null;
+      }
+    }
+
     const result = await fndb.addNewItem(tables.products, body);
-    console.log("result", result);
     if (result != null) {
       body.id = result; // Get the inserted ID from the result.
       body.created_at = new Date().toISOString();
+      console.log("New Product ID:", parsedVariants);
+      if(parsedVariants && Array.isArray(parsedVariants)){
+        await Promise.all(parsedVariants.map(async (variant) => {
+          variant.product_id = result;
+          await fndb.addNewItem(tables.productVariants, variant);
+        }));
+      }
+      if(parsedBrandPrices && Array.isArray(parsedBrandPrices)){
+        await Promise.all(parsedBrandPrices.map(async (price) => {
+          price.product_id = result;
+          await fndb.addNewItem(tables.product_brand_prices, price);
+        }));
+      }
+
+      body.product_variants = Array.isArray(parsedVariants) ? parsedVariants : [];
+      body.product_brand_prices = Array.isArray(parsedBrandPrices) ? parsedBrandPrices : [];
+
       await Promise.all(
         fileUrls.map(async (url, index) => {
           await fndb.addNewItem(tables.product_images, {
@@ -295,6 +470,7 @@ async function addProduct(req, res) {
           });
         })
       );
+
       body.image_urls = fileUrls; // Add the image URLs to the response body
       resp = {
         status: true,
@@ -405,7 +581,7 @@ async function getAllProducts(req, res) {
     // Build conditions
     const conditions = [`p.is_active = ${is_active}`];
     if (name) conditions.push(`p.name LIKE '%${name}%'`);
-    if (brand_id) conditions.push(`p.brand_id = ${brand_id}`);
+    if (brand_id) conditions.push(`EXISTS (SELECT 1 FROM ${tables.product_brand_prices} pbp WHERE pbp.product_id = p.id AND pbp.brand_id = ${brand_id})`);
     if (sub_category_id) conditions.push(`p.sub_category_id = ${sub_category_id}`);
     if (category_id) conditions.push(`sc.category_id = ${category_id}`);
 
@@ -449,39 +625,44 @@ async function getAllProducts(req, res) {
     const total = countResultRaw?.[0]?.total || 0;
 
     // Transform result
-    const finalData = result.map((row) => {
-      let image_urls = [];
-      try {
-        image_urls = JSON.parse(row.image_urls || "[]");
-      } catch (e) {}
+    const finalData = await Promise.all(
+      result.map(async (row) => {
+        let image_urls = [];
+        try {
+          image_urls = JSON.parse(row.image_urls || "[]");
+        } catch (e) {}
 
-      const data = {
-        ...row,
-        image_urls,
-        sub_category: {
-          id: row.sc_id,
-          name: row.sc_name,
-          image_url: row.sc_image_url,
-          description: row.sc_description,
-        },
-        category: {
-          id: row.c_id,
-          name: row.c_name,
-          image_url: row.c_image_url,
-          description: row.c_description,
-        },
-      };
+        const associations = await getProductAssociations(row.id);
 
-      // Clean up extra fields
-      delete data.sc_id;
-      delete data.sc_name;
-      delete data.sc_description;
-      delete data.c_id;
-      delete data.c_name;
-      delete data.c_description;
+        const data = {
+          ...row,
+          image_urls,
+          ...associations,
+          sub_category: {
+            id: row.sc_id,
+            name: row.sc_name,
+            image_url: row.sc_image_url,
+            description: row.sc_description,
+          },
+          category: {
+            id: row.c_id,
+            name: row.c_name,
+            image_url: row.c_image_url,
+            description: row.c_description,
+          },
+        };
 
-      return data;
-    });
+        // Clean up extra fields
+        delete data.sc_id;
+        delete data.sc_name;
+        delete data.sc_description;
+        delete data.c_id;
+        delete data.c_name;
+        delete data.c_description;
+
+        return data;
+      })
+    );
 
     resp = {
       success: true,
@@ -542,6 +723,8 @@ async function getProductById(req, res) {
         productId
       );
       product.image_urls = images.map((image) => image.image_url);
+      const associations = await getProductAssociations(product.id);
+      Object.assign(product, associations);
 
       // Structure nested sub_category and category
       product.sub_category = {
@@ -614,8 +797,9 @@ async function getProductsBySubCategoryId(req, res) {
             product.id
           );
           product.image_urls = images.map((image) => image.image_url);
+          const associations = await getProductAssociations(product.id);
+          Object.assign(product, associations);
 
-          // Structure nested sub_category and category
           product.sub_category = {
             id: product.sc_id,
             name: product.sc_name,

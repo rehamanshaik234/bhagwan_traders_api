@@ -153,6 +153,7 @@ async function updateItem(tableName, dataId, data) {
       "id" +
       " = " +
       dataId;
+    console.log('update queryText', queryText);
     const result = await sqlTransaction(queryText, values);
     if (result.affectedRows == 0) {
       fnCommon.logErrorMsg(
