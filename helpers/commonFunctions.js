@@ -1,4 +1,7 @@
+const { getAccessToken } = require("./google_token_service");
+
 var logger = require("./logger").Logger;
+const axios = require("axios");
 
 module.exports = {
   getOtpNumber,
@@ -11,6 +14,7 @@ module.exports = {
   logInfoMsg,
   // logDebugMsg,
   randomText,
+  sendNotificationFromServer
 };
 
 function getOtpNumber() {
@@ -154,4 +158,55 @@ function randomText(length) {
     counter += 1;
   }
   return result;
+}
+
+
+async function sendNotificationFromServer(title, body, fcm_token, data) {
+    try {
+        const notificationData = {
+            message: {
+                token: fcm_token,
+                notification: {
+                    title: title,
+                    body: body,
+                },
+                data: data || {},
+                android: {
+                    notification: {
+                        visibility: "PUBLIC"
+                    }
+                },
+                apns: {
+                    payload: {
+                        aps: {
+                            "interruption-level": "active"
+                        }
+                    }
+                }
+            }
+        };
+
+        const token = await getAccessToken();
+        if (token != undefined && token != null) {
+            const response = await axios.post(
+                "https://fcm.googleapis.com/v1/projects/bhagwan-traders/messages:send",
+                notificationData,
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    }
+                }
+            );
+            if (response.status === 200) {
+                console.log("Notification sent successfully");
+            } else {
+                console.error("Error sending notification:", response.data);
+            }
+        } else {
+            console.error("Error retrieving access token");
+        }
+    } catch (error) {
+        console.error("Error sending notification:", error);
+    }
 }

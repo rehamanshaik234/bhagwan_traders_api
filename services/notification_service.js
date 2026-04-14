@@ -28,7 +28,7 @@ async function sendNotification(req, res) {
         }
     } catch (error) {
         console.error("Error sending notification:", error);
-        return res.status(200).send({error:"Error sending notification: " + error.message});
+        return res.status(500).send({ error: error.message || "Error sending notification" });
     }
 }
 

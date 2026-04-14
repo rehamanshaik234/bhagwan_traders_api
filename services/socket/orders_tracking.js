@@ -1,6 +1,7 @@
 const tableNames = require("../../helpers/tableNames");
 const fndb = require("../../helpers/dbFunctions");
 const tableColumns = require("../../helpers/tableColumns");
+const { sendNotificationFromServer } = require("../../helpers/commonFunctions");
 
 module.exports=(socket, io)=>{
   // Handle user authentication/login
@@ -73,6 +74,20 @@ module.exports=(socket, io)=>{
                       updatedOrder.order_items = orderItems;
                     }   
                //Notification to all delivery partners
+              const deliveryPartners = await fndb.getAllItems(tableNames.delivery_partner);
+              deliveryPartners.forEach(partner => {
+                if(partner.fcm_token){
+                  sendNotificationFromServer('Order Dispatched', `Order with ID ${data.orderId} has been dispatched and is ready for delivery.`,partner.fcm_token,);
+                }
+              });
+              const customer = updatedOrder.customer;
+              if(customer && customer.fcm_token){
+                sendNotificationFromServer('Order Dispatched', `Your order with ID ${data.orderId} has been dispatched and is on its way!`,customer.fcm_token,{
+                  "order": JSON.stringify({
+                    id: updatedOrder.id,
+                  })
+                });
+              }
               // Emit the updated order details to all clients in the room
               io.emit('dispatched_order', {
                   orderId: data.orderId,

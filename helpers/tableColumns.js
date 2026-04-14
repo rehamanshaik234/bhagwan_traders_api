@@ -69,6 +69,7 @@ const CustomerCols = {
   password: "password",
   number: "number",
   created_at: "created_at",
+  fcm_token: "fcm_token",
 };
 
 const DeliveryPartnerCols = {
@@ -78,6 +79,7 @@ const DeliveryPartnerCols = {
   password: "password",
   number: "number",
   created_at: "created_at",
+  fcm_token: "fcm_token",
 };
 
 const OrderCols = {
@@ -101,7 +103,7 @@ const OrderItemCols = {
   id: "id",
   order_id: "order_id",
   product_id: "product_id",
-  brands_id: "brands_id",
+  product_brand_prices: "product_brand_prices",
   product_variant_id: "product_variant_id",
   quantity: "quantity",
   price: "price",
@@ -160,6 +162,7 @@ const SubCategoryCols = {
   name: "name",
   image_url: "image_url",
   description: "description",
+  has_brand: "has_brand", //default 0
   category_id: "category_id",
   created_at: "created_at",
 };

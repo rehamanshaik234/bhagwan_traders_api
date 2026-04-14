@@ -21,6 +21,44 @@ async function mainSearch(req, res) {
         sub_category_id,
         category_id
         FROM (
+            -- Search in product_brand_prices table to get product details with proper category_id mapping
+            (
+                SELECT
+                    p.name,
+                    p.image_url,
+                    p.description,
+                    p.id as product_id,
+                    sc.id as sub_category_id,
+                    ct.id as category_id
+                FROM ${tableNames.product_brand_prices} pbp
+                LEFT JOIN products p ON pbp.product_id = p.id
+                LEFT JOIN sub_categories AS sc ON p.sub_category_id = sc.id
+                LEFT JOIN categories AS ct ON ct.id = sc.category_id
+                LEFT JOIN ${tableNames.brands} b ON pbp.brand_id = b.id
+                WHERE p.name LIKE '%${query}%' OR p.description LIKE '%${query}%' OR b.name LIKE '%${query}%'
+            )
+            
+            UNION ALL
+            
+            -- Search in Brand Prices table to get product details with proper category_id mapping
+            (
+                SELECT
+                    p.name,
+                    p.image_url,
+                    p.description,
+                    p.id as product_id,
+                    sc.id as sub_category_id,
+                    ct.id as category_id
+                FROM ${tableNames.product_brand_prices} pbp
+                LEFT JOIN products p ON pbp.product_id = p.id
+                LEFT JOIN sub_categories AS sc ON p.sub_category_id = sc.id
+                LEFT JOIN categories AS ct ON ct.id = sc.category_id
+                LEFT JOIN ${tableNames.brands} b ON pbp.brand_id = b.id
+                WHERE p.name LIKE '%${query}%' OR p.description LIKE '%${query}%' OR b.name LIKE '%${query}%'
+            )
+            
+            UNION ALL
+
             -- Search in products table with proper category_id mapping
             (
                 SELECT 

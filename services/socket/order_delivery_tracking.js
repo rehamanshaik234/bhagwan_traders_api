@@ -80,16 +80,37 @@ module.exports = (socket, io) => {
       orderDetails.customer = (orderDetails.customer);
       orderDetails.address = (orderDetails.address);
       orderDetails.delivery_partner = (orderDetails.delivery_partner);
-      const orderItems= await fndb.customQuery(`SELECT order_items.id AS id, order_items.quantity, order_items.price,
-       JSON_OBJECT( 'id', products.id, 'name', products.name, 'description', products.description, 'image_url',products.image_url, 'price',products.price, 'is_active',products.is_active, 'stock',products.stock, 'sub_category_id',products.sub_category_id ) AS product FROM order_items 
-       LEFT JOIN products ON order_items.product_id = products.id WHERE order_items.order_id = ?`,[data.orderId]);
-      if (orderItems && orderItems.length > 0) {
-        orderItems.forEach(item => {
-          item.product = (item.product);
-        });
-        orderDetails.order_items = orderItems;
-      }
-       result = orderDetails;
+      var orderItems= await fndb.customQuery(`SELECT order_items.id AS id, order_items.quantity, order_items.price, order_items.product_brand_prices, order_items.product_id,
+          JSON_OBJECT( 'id', products.id, 'name', products.name, 'description', products.description, 'image_url',products.image_url, 'price',products.price, 'is_active',products.is_active, 'stock',products.stock, 'sub_category_id',products.sub_category_id ) AS product FROM order_items 
+          LEFT JOIN products ON order_items.product_id = products.id WHERE order_items.order_id = ?`,[data.orderId]);
+            const orderItemsWithBrands = [];
+              for(let item of orderItems){
+                if(item.product_brand_prices){
+                  var brands = await fndb.customQuery(`
+                          SELECT 
+                          pbp.id,
+                          pbp.product_id,
+                          pbp.brand_id,
+                          pbp.price,
+                          pbp.stock,
+                          pbp.created_at,
+                          JSON_OBJECT(
+                            'id', b.id,
+                            'name', b.name,
+                            'description', b.description,
+                            'created_at', b.created_at,
+                            'image_url', b.image_url
+                          ) AS brand
+                          FROM ${tableNames.product_brand_prices} pbp
+                          LEFT JOIN ${tableNames.brands} as b ON pbp.brand_id = b.id
+                    WHERE ${tableColumns.ProductBrandPriceCols.product_id} = ?`, [item.product_id]);
+                  brands = brands.filter(brand => brand.id == item.product_brand_prices); // Exclude the brand of the original product
+                  item.brands = brands ?? [];
+              }
+              orderItemsWithBrands.push(item);
+             }
+      orderDetails.order_items = orderItemsWithBrands;
+      result = orderDetails;
     if (result) {
       if(data.pickOrder) {
         io.to(`${data.orderId}`).emit('order_details', {
@@ -98,6 +119,7 @@ module.exports = (socket, io) => {
           timestamp: new Date()
         });
       } else {
+        console.log('Order details retrieved successfully:', result);
         socket.emit('order_details', {
           data: result,
           message: 'Order details retrieved successfully',
@@ -185,6 +207,55 @@ module.exports = (socket, io) => {
             });
         }
     }); 
+
+  socket.on('cancel_order', async(data) => {
+    console.log('Order cancellation request received:', data);
+    if(data.status == 'Dispatched' || data.status == 'Picked' || data.status == 'Out for Delivery') {
+      return socket.emit('cancel_error', {
+        orderId: data.orderId,
+        message: 'Order cannot be cancelled at this stage',
+        timestamp: new Date()
+      });
+    }
+    const orderId = data.orderId;
+    const updateData = {
+        status: 'Cancelled',
+    };
+    delete updateData.orderId; // Remove orderId from updateData
+    const result = await fndb.updateItem(
+        tableNames.orders,
+        orderId,
+        updateData
+    );
+    //re-update order items to increase stock
+    var orderItems= await fndb.customQuery(`SELECT order_items.id AS id, order_items.quantity, order_items.price, order_items.product_brand_prices, order_items.product_id FROM order_items 
+    WHERE order_items.order_id = ?`,[data.orderId]);
+    for(let item of orderItems){
+      if(item.product_brand_prices){
+        await fndb.customQuery(`UPDATE ${tableNames.product_brand_prices} SET stock = stock + ? WHERE id = ?`, [item.quantity, item.product_brand_prices]);
+      } else {
+        await fndb.customQuery(`UPDATE ${tableNames.products} SET stock = stock + ? WHERE id = ?`, [item.quantity, item.product_id]);
+      }
+    }
+    if(result) {
+        console.log('Order cancelled successfully:', result);
+        io.emit('admin_order_cancelled', {
+            orderId: orderId,
+            status: 'Cancelled',
+            data: updateData,
+            message: 'Order has been cancelled',
+            timestamp: new Date()
+        });
+        // Emit the cancellation message to all clients in the room
+        io.to(`${orderId}`).emit('order_cancelled', {
+            orderId: orderId,
+            status: 'Cancelled',
+            data: updateData,
+            message: 'Order has been cancelled',
+            timestamp: new Date()
+        });
+    }
+});
 
   
   // Handle user logout

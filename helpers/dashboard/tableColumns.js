@@ -69,6 +69,7 @@ const CustomerCols = {
   password: "password",
   number: "number",
   created_at: "created_at",
+  fcm_token: "fcm_token",
 };
 
 const DeliveryPartnerCols = {
@@ -78,6 +79,7 @@ const DeliveryPartnerCols = {
   password: "password",
   number: "number",
   created_at: "created_at",
+  fcm_token: "fcm_token",
 };
 
 const OrderCols = {
@@ -158,6 +160,7 @@ const SubCategoryCols = {
   name: "name",
   image_url: "image_url",
   description: "description",
+  has_brand: "has_brand", //default 0
   category_id: "category_id",
   created_at: "created_at",
 };

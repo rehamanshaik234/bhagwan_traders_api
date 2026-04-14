@@ -3,7 +3,7 @@ const tableNames = require("../helpers/tableNames.js");
 const router = express.Router();
 const path = require("path");
 const fndb = require("../helpers/dbFunctions.js");
-const { AddressCols } = require("../helpers/tableColumns.js");
+const { AddressCols, BrandCols, ProductBrandPriceCols, ProductVariantCols } = require("../helpers/tableColumns.js");
 const authenticateToken = require("../helpers/authtoken.js");
 const {uploadProductImage}= require("../helpers/fileupload.js");
 
@@ -74,12 +74,34 @@ async function getAllProducts(req, res) {
                     LEFT JOIN sub_categories sc ON p.sub_category_id = sc.id
                     LEFT JOIN categories c ON sc.category_id = c.id
                     WHERE p.is_active = 1; `);
-
-    result = result.map(row => {
+    result = await Promise.all(result.map(async row => {
       let image_urls = [];
+      let brands = [];
+      let productVariants = [];
       try {
-        image_urls = JSON.parse(row.image_urls || '[]');
+        image_urls = JSON.parse(row.image_urls || '[]');``
       } catch (e) {}
+      try{
+       brands = await fndb.customQuery(`SELECT 
+          pbp.id,
+          pbp.product_id,
+          pbp.brand_id,
+          pbp.price,
+          pbp.stock,
+          pbp.created_at,
+        JSON_OBJECT(
+          'id', b.id,
+          'name', b.name,
+          'description', b.description,
+          'created_at', b.created_at,
+          'image_url', b.image_url
+        ) AS brand
+        FROM ${tableNames.product_brand_prices} pbp
+        LEFT JOIN ${tableNames.brands} as b ON pbp.brand_id = b.id
+        WHERE pbp.product_id = ?`, [productId]);      }catch(e){}
+      try{
+        productVariants = await fndb.customQuery(`SELECT * FROM ${tableNames.productVariants} WHERE ${ProductVariantCols.product_id} = ?`, [row.id]);
+      }catch(e){}
       let data = {
         ...row,
         image_urls,
@@ -94,7 +116,9 @@ async function getAllProducts(req, res) {
           name: row.c_name,
           image_url: row.c_image_url,
           description: row.c_description
-        }
+        },
+        brands: brands,
+        variants: productVariants
       };
         // Clean up redundant fields
         delete row.sc_id;
@@ -104,7 +128,7 @@ async function getAllProducts(req, res) {
         delete row.c_name;
         delete row.c_description;
       return data;
-    });
+    }));
 
     if (result != null) {
       resp = {
@@ -150,6 +174,27 @@ async function getProductById(req, res) {
       // Get images
       const images = await fndb.getAllItemsByID(tableNames.product_images, "product_id", productId);
       product.image_urls = images.map(image => image.image_url);
+      const brands = await fndb.customQuery(`SELECT 
+          pbp.id,
+          pbp.product_id,
+          pbp.brand_id,
+          pbp.price,
+          pbp.stock,
+          pbp.created_at,
+        JSON_OBJECT(
+          'id', b.id,
+          'name', b.name,
+          'description', b.description,
+          'created_at', b.created_at,
+          'image_url', b.image_url
+        ) AS brand
+        FROM ${tableNames.product_brand_prices} pbp
+        LEFT JOIN ${tableNames.brands} as b ON pbp.brand_id = b.id
+        WHERE ${ProductBrandPriceCols.product_id} = ?`, [productId]);
+      product.brands = brands;
+
+      const productVariants = await fndb.customQuery(`SELECT * FROM ${tableNames.productVariants} WHERE ${ProductVariantCols.product_id} = ?`, [productId]);
+      product.variants = productVariants;
 
       // Structure nested sub_category and category
       product.sub_category = {
@@ -214,6 +259,29 @@ async function getProductsBySubCategoryId(req, res) {
         // Get images for each product
         const images = await fndb.getAllItemsByID(tableNames.product_images, "product_id", product.id);
         product.image_urls = images.map(image => image.image_url);
+
+        const brands = await fndb.customQuery(`SELECT 
+          pbp.id,
+          pbp.product_id,
+          pbp.brand_id,
+          pbp.price,
+          pbp.stock,
+          pbp.created_at,
+          JSON_OBJECT(
+            'id', b.id,
+            'name', b.name,
+            'description', b.description,
+            'created_at', b.created_at,
+            'image_url', b.image_url
+          ) AS brand
+          FROM ${tableNames.product_brand_prices} pbp
+          LEFT JOIN ${tableNames.brands} as b ON pbp.brand_id = b.id
+          WHERE ${ProductBrandPriceCols.product_id} = ?`, [product.id]);
+          
+        product.brands = brands;      
+          
+        const productVariants = await fndb.customQuery(`SELECT * FROM ${tableNames.productVariants} WHERE ${ProductVariantCols.product_id} = ?`, [product.id]);
+        product.variants = productVariants;
 
         // Structure nested sub_category and category
         product.sub_category = {
@@ -285,6 +353,28 @@ async function searchProducts(req, res) {
         const images = await fndb.getAllItemsByID(tableNames.product_images, "product_id", product.id);
         product.image_urls = images.map(image => image.image_url);
 
+        const brands = await fndb.customQuery(`SELECT 
+          pbp.id,
+          pbp.product_id,
+          pbp.brand_id,
+          pbp.price,
+          pbp.stock,
+          pbp.created_at,
+          JSON_OBJECT(
+            'id', b.id,
+            'name', b.name,
+            'description', b.description,
+            'created_at', b.created_at,
+            'image_url', b.image_url
+          ) AS brand
+          FROM ${tableNames.product_brand_prices} pbp
+          LEFT JOIN ${tableNames.brands} as b ON pbp.brand_id = b.id
+          WHERE ${ProductBrandPriceCols.product_id} = ?`, [product.id]);
+        product.brands = brands;
+
+        const productVariants = await fndb.customQuery(`SELECT * FROM ${tableNames.productVariants} WHERE ${ProductVariantCols.product_id} = ?`, [product.id]);
+        product.variants = productVariants;
+
         // Structure nested sub_category and category
         product.sub_category = {
           id: product.sc_id,
@@ -349,6 +439,28 @@ async function getTopFeaturedProducts(req, res) {
         // Get images for each product
         const images = await fndb.getAllItemsByID(tableNames.product_images, "product_id", product.id);
         product.image_urls = images.map(image => image.image_url);
+
+        const brands = await fndb.customQuery(`SELECT 
+          pbp.id,
+          pbp.product_id,
+          pbp.brand_id,
+          pbp.price,
+          pbp.stock,
+          pbp.created_at,
+          JSON_OBJECT(
+            'id', b.id,
+            'name', b.name,
+            'description', b.description,
+            'created_at', b.created_at,
+            'image_url', b.image_url
+          ) AS brand
+          FROM ${tableNames.product_brand_prices} pbp
+          LEFT JOIN ${tableNames.brands} as b ON pbp.brand_id = b.id
+          WHERE ${ProductBrandPriceCols.product_id} = ?`, [product.id]);
+        product.brands = brands;
+        
+        const productVariants = await fndb.customQuery(`SELECT * FROM ${tableNames.productVariants} WHERE ${ProductVariantCols.product_id} = ?`, [product.id]);
+        product.variants = productVariants;
 
         // Structure nested sub_category and category
         product.sub_category = {
@@ -415,6 +527,27 @@ async function getBestSellerProducts(req, res) {
         const images = await fndb.getAllItemsByID(tableNames.product_images, "product_id", product.id);
         product.image_urls = images.map(image => image.image_url);
 
+        const brands = await fndb.customQuery(`SELECT 
+          pbp.id,
+          pbp.product_id,
+          pbp.brand_id,
+          pbp.price,
+          pbp.stock,
+          pbp.created_at,
+          JSON_OBJECT(
+            'id', b.id,
+            'name', b.name,
+            'description', b.description,
+            'created_at', b.created_at,
+            'image_url', b.image_url
+          ) AS brand
+          FROM ${tableNames.product_brand_prices} pbp
+          LEFT JOIN ${tableNames.brands} as b ON pbp.brand_id = b.id
+          WHERE ${ProductBrandPriceCols.product_id} = ?`, [product.id]);
+        product.brands = brands;
+        
+        const productVariants = await fndb.customQuery(`SELECT * FROM ${tableNames.productVariants} WHERE ${ProductVariantCols.product_id} = ?`, [product.id]);
+        product.variants = productVariants;
         // Structure nested sub_category and category
         product.sub_category = {
           id: product.sc_id,
@@ -454,7 +587,7 @@ async function getBestSellerProducts(req, res) {
 }
 
 async function getSimilarProducts(req, res) {
-  const {product_id} = req.body;
+  const {product_id, brand_id} = req.body;
   let resp = {};
   try {
     // Fetch similar products based on sub_category_id of the given product
@@ -476,20 +609,45 @@ async function getSimilarProducts(req, res) {
       LEFT JOIN sub_categories sc ON p.sub_category_id = sc.id
       LEFT JOIN categories c ON sc.category_id = c.id
       WHERE p.is_active = 1 
-      AND p.sub_category_id = ?
-      AND p.id != ?
-    `, [product.sub_category_id, product_id]);
+      ${brand_id? ``: `AND p.sub_category_id = ?`}
+      AND p.id ${brand_id? `= ?` : `!= ?`}
+    `, brand_id? [product_id] : [product.sub_category_id, product_id]);
 
     if (result && result.length > 0) {
       const productsWithDetails = await Promise.all(result.map(async (product) => {
+        var brands = await fndb.customQuery(`SELECT 
+          pbp.id,
+          pbp.product_id,
+          pbp.brand_id,
+          pbp.price,
+          pbp.stock,
+          pbp.created_at,
+          JSON_OBJECT(
+            'id', b.id,
+            'name', b.name,
+            'description', b.description,
+            'created_at', b.created_at,
+            'image_url', b.image_url
+          ) AS brand
+          FROM ${tableNames.product_brand_prices} pbp
+          LEFT JOIN ${tableNames.brands} as b ON pbp.brand_id = b.id
+          WHERE ${ProductBrandPriceCols.product_id} = ?`, [product.id]);
+        
+        brands = brands.filter(brand => brand.brand_id != brand_id); // Exclude the brand of the original product
+        product.brands = brands ?? [];
+
         // Get images for each product
-        if(product.id === product_id) {
+        if(product.id === product_id && (product.brands.length === 0)) {
           return null; // Skip the product itself
         }
         if(!product) return null; // Handle case where product is null
 
         const images = await fndb.getAllItemsByID(tableNames.product_images, "product_id", product.id);
         product.image_urls = images.map(image => image.image_url);
+
+        
+        const productVariants = await fndb.customQuery(`SELECT * FROM ${tableNames.productVariants} WHERE ${ProductVariantCols.product_id} = ?`, [product.id]);
+        product.variants = productVariants;
 
         // Structure nested sub_category and category
         product.sub_category = {

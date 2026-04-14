@@ -2,7 +2,7 @@ const express = require("express");
 const tableNames = require("../helpers/tableNames");
 const router = express.Router();
 const fndb = require("../helpers/dbFunctions.js");
-const { AddressCols, CustomerGstCols, OrderItemCols, OrderCols } = require("../helpers/tableColumns.js");
+const { AddressCols, CustomerGstCols, OrderItemCols, OrderCols, ProductBrandPriceCols } = require("../helpers/tableColumns.js");
 const authenticateToken = require("../helpers/authtoken");
 
 router.post("/placeOrder", [authenticateToken.validJWTNeeded, placeOrder]);
@@ -17,12 +17,23 @@ router.post("/ordersHistory", [authenticateToken.validJWTNeeded, ordersHistory])
 async function placeOrder(req, res) {
   var resp = new Object();
   const body = req.body;
+  console.log("Placing order with body:", body);
   try {
     var productStocks= [];
     if(body.orderItems && body.orderItems.length > 0) {
       for (let item of body.orderItems) {
         const product = await fndb.getItemById(tableNames.products, item.product_id);
-        if (product && product.stock < item.quantity) {
+        if(product && product.has_brand == 1) {
+          console.log(`Product ${product.name} has brands. Checking brand price ID ${item.product_brand_prices}`);
+          const brandPrice = await fndb.getItemById(tableNames.product_brand_prices, item.product_brand_prices);
+          console.log(`Checking stock for brand price ID ${item.product_brand_prices}:`, brandPrice);
+          if(brandPrice && brandPrice.stock < item.quantity) {
+            resp = { status: false, error: `Insufficient stock for product ${product.name} with selected brand`, product_id: item.product_id};
+            return res.send(resp);
+          }else if(brandPrice) {
+            productStocks.push({ product_id: item.product_id, available_quantity: parseInt(`${brandPrice.stock}`), quantity: parseInt(`${item.quantity}`), product_brand_prices: item.product_brand_prices });
+          }
+        }else if (product && product.stock < item.quantity) {
           resp = { status: false, error: `Insufficient stock for product ${product.name}`, product_id: item.product_id };
           return res.send(resp);
         }else{
@@ -44,7 +55,11 @@ async function placeOrder(req, res) {
         }
         // Update product stock after placing the order
         for (let stock of productStocks) {
-          await fndb.updateItem(tableNames.products, stock.product_id, { stock: stock.available_quantity - stock.quantity });
+          if(stock.product_brand_prices){
+            await fndb.updateItem(tableNames.product_brand_prices, stock.product_brand_prices, { stock: stock.available_quantity - stock.quantity });
+          }else{
+            await fndb.updateItem(tableNames.products, stock.product_id, { stock: stock.available_quantity - stock.quantity });
+          }
         }
       resp = {
         status: true,
@@ -138,15 +153,36 @@ async function ordersByStatus(req, res) {
         return order;
       });
       for (let order of result) {
-        const orderItems= await fndb.customQuery(`SELECT order_items.id AS id, order_items.quantity, order_items.price,
+        var orderItems= await fndb.customQuery(`SELECT order_items.id AS id, order_items.quantity, order_items.price, order_items.product_brand_prices, order_items.product_id,
               JSON_OBJECT( 'id', products.id, 'name', products.name, 'description', products.description, 'image_url',products.image_url, 'price',products.price, 'is_active',products.is_active, 'stock',products.stock, 'sub_category_id',products.sub_category_id ) AS product FROM order_items 
               LEFT JOIN products ON order_items.product_id = products.id WHERE order_items.order_id = ?`,[order.id]);
-              if (orderItems && orderItems.length > 0) {
-                orderItems.forEach(item => {
-                  item.product = item.product;
-                });
-              } 
-        order.order_items = orderItems;
+              const orderItemsWithBrands = [];
+              for(let item of orderItems){
+                if(item.product_brand_prices){
+                  var brands = await fndb.customQuery(`
+                          SELECT 
+                          pbp.id,
+                          pbp.product_id,
+                          pbp.brand_id,
+                          pbp.price,
+                          pbp.stock,
+                          pbp.created_at,
+                          JSON_OBJECT(
+                            'id', b.id,
+                            'name', b.name,
+                            'description', b.description,
+                            'created_at', b.created_at,
+                            'image_url', b.image_url
+                          ) AS brand
+                          FROM ${tableNames.product_brand_prices} pbp
+                          LEFT JOIN ${tableNames.brands} as b ON pbp.brand_id = b.id
+                    WHERE ${ProductBrandPriceCols.product_id} = ?`, [item.product_id]);
+                  brands = brands.filter(brand => brand.id == item.product_brand_prices); // Exclude the brand of the original product
+                  item.brands = brands ?? [];
+                  }
+                orderItemsWithBrands.push(item);
+              }
+        order.order_items = orderItemsWithBrands;
       }
       resp = {
         status: true,
@@ -200,16 +236,48 @@ async function ordersHistory(req, res) {
         order.customer_gst = order.customer_gst;
         return order;
       });
+      // for (let order of result) {
+      //   const orderItems= await fndb.customQuery(`SELECT order_items.id AS id, order_items.quantity, order_items.price,
+      //         JSON_OBJECT( 'id', products.id, 'name', products.name, 'description', products.description, 'image_url',products.image_url, 'price',products.price, 'is_active',products.is_active, 'stock',products.stock, 'sub_category_id',products.sub_category_id ) AS product FROM order_items 
+      //         LEFT JOIN products ON order_items.product_id = products.id WHERE order_items.order_id = ?`,[order.id]);
+      //         if (orderItems && orderItems.length > 0) {
+      //           orderItems.forEach(item => {
+      //             item.product = item.product;
+      //           });
+      //         } 
+      //   order.order_items = orderItems;
+      // }
       for (let order of result) {
-        const orderItems= await fndb.customQuery(`SELECT order_items.id AS id, order_items.quantity, order_items.price,
+        var orderItems= await fndb.customQuery(`SELECT order_items.id AS id, order_items.quantity, order_items.price, order_items.product_brand_prices, order_items.product_id,
               JSON_OBJECT( 'id', products.id, 'name', products.name, 'description', products.description, 'image_url',products.image_url, 'price',products.price, 'is_active',products.is_active, 'stock',products.stock, 'sub_category_id',products.sub_category_id ) AS product FROM order_items 
               LEFT JOIN products ON order_items.product_id = products.id WHERE order_items.order_id = ?`,[order.id]);
-              if (orderItems && orderItems.length > 0) {
-                orderItems.forEach(item => {
-                  item.product = item.product;
-                });
-              } 
-        order.order_items = orderItems;
+              const orderItemsWithBrands = [];
+              for(let item of orderItems){
+                if(item.product_brand_prices){
+                  var brands = await fndb.customQuery(`
+                          SELECT 
+                          pbp.id,
+                          pbp.product_id,
+                          pbp.brand_id,
+                          pbp.price,
+                          pbp.stock,
+                          pbp.created_at,
+                          JSON_OBJECT(
+                            'id', b.id,
+                            'name', b.name,
+                            'description', b.description,
+                            'created_at', b.created_at,
+                            'image_url', b.image_url
+                          ) AS brand
+                          FROM ${tableNames.product_brand_prices} pbp
+                          LEFT JOIN ${tableNames.brands} as b ON pbp.brand_id = b.id
+                    WHERE ${ProductBrandPriceCols.product_id} = ?`, [item.product_id]);
+                  brands = brands.filter(brand => brand.id == item.product_brand_prices); // Exclude the brand of the original product
+                  item.brands = brands ?? [];
+                  }
+                orderItemsWithBrands.push(item);
+                }
+        order.order_items = orderItemsWithBrands;
       }
       resp = {
         status: true,
@@ -268,17 +336,39 @@ async function updateOrder(req, res) {
         updatedOrder.customer_gst = (updatedOrder.customer_gst);
         updatedOrder.status = status; // Update the status in the response
         // Get order items
-        const orderItems = await fndb.customQuery(`SELECT order_items.id AS id, order_items.quantity, order_items.price,
+        var orderItems= await fndb.customQuery(`SELECT order_items.id AS id, order_items.quantity, order_items.price, order_items.product_brand_prices, order_items.product_id,
               JSON_OBJECT( 'id', products.id, 'name', products.name, 'description', products.description, 'image_url',products.image_url, 'price',products.price, 'is_active',products.is_active, 'stock',products.stock, 'sub_category_id',products.sub_category_id ) AS product FROM order_items 
-              LEFT JOIN products ON order_items.product_id = products.id WHERE order_items.order_id = ?`, [order_id]);
+              LEFT JOIN products ON order_items.product_id = products.id WHERE order_items.order_id = ?`,[order_id]);
         
         if (orderItems && orderItems.length > 0) {
-          orderItems.forEach(item => {
-            item.product = (item.product);
-          });
+              const orderItemsWithBrands = [];
+              for(let item of orderItems){
+                if(item.product_brand_prices){
+                  var brands = await fndb.customQuery(`
+                          SELECT 
+                          pbp.id,
+                          pbp.product_id,
+                          pbp.brand_id,
+                          pbp.price,
+                          pbp.stock,
+                          pbp.created_at,
+                          JSON_OBJECT(
+                            'id', b.id,
+                            'name', b.name,
+                            'description', b.description,
+                            'created_at', b.created_at,
+                            'image_url', b.image_url
+                          ) AS brand
+                          FROM ${tableNames.product_brand_prices} pbp
+                          LEFT JOIN ${tableNames.brands} as b ON pbp.brand_id = b.id
+                    WHERE ${ProductBrandPriceCols.product_id} = ?`, [item.product_id]);
+                  brands = brands.filter(brand => brand.id == item.product_brand_prices); // Exclude the brand of the original product
+                  item.brands = brands ?? [];
+                }
+                orderItemsWithBrands.push(item);
+              }
+          updatedOrder.order_items = orderItemsWithBrands;
         }
-        
-        updatedOrder.order_items = orderItems;
       }   
       
       resp = {
@@ -341,6 +431,7 @@ async function getPickedOrders(req, res) {
   }
   return res.send(resp);
 }
+
 
 
 module.exports = router;
