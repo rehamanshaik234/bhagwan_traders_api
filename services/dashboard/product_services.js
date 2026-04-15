@@ -8,7 +8,7 @@ const { uploadProductImage,deleteProductImage } = require("../../helpers/dashboa
 const { AddressCols } = require("../../helpers/dashboard/tableColumns.js");
 const path = require("path");
 
-router.put("/editProduct/:id", [authenticateToken.validJWTNeeded,uploadProductImage.array("add_images"),editProduct]);
+router.put("/editProduct/:id", [authenticateToken.validJWTNeeded, handleEditProductUpload, editProduct]);
 router.get("/getProducts", [authenticateToken.validJWTNeeded, getProducts]);
 router.put("/updateQuantity/:id", [authenticateToken.validJWTNeeded, updateQuantity]);
 router.put("/disableProduct/:id", [authenticateToken.validJWTNeeded, toggleProductStatus]);
@@ -60,6 +60,41 @@ function validateProduct(data) {
   return null;
 }
 
+function handleEditProductUpload(req, res, next) {
+  uploadProductImage.fields([
+    { name: "add_images", maxCount: 20 },
+    { name: "add_images[]", maxCount: 20 },
+    { name: "files", maxCount: 20 },
+    { name: "files[]", maxCount: 20 },
+  ])(req, res, (err) => {
+    if (err) {
+      return res.status(400).send({
+        success: false,
+        message: err.message,
+      });
+    }
+
+    next();
+  });
+}
+
+function getUploadedFiles(reqFiles) {
+  if (!reqFiles) {
+    return [];
+  }
+
+  if (Array.isArray(reqFiles)) {
+    return reqFiles;
+  }
+
+  return [
+    ...(reqFiles.add_images || []),
+    ...(reqFiles["add_images[]"] || []),
+    ...(reqFiles.files || []),
+    ...(reqFiles["files[]"] || []),
+  ];
+}
+
 async function getProductAssociations(productId) {
   const [product_variants, product_brand_prices] = await Promise.all([
     fndb.getAllItemsByID(tables.productVariants, "product_id", productId),
@@ -79,7 +114,8 @@ async function editProduct(req, res) {
     const { product_variants, product_brand_prices, deleted_variants, deleted_brand_prices } = req.body;
     let updateData = JSON.parse(JSON.stringify(req.body));
     const prevImages = req.body.deleted_images ? JSON.parse(req.body.deleted_images) : [];
-    const newImages = req.files ? req.files.map((file) => `https://materialmart.shop/uploads/product/${file.filename}`) : [];
+    const uploadedFiles = getUploadedFiles(req.files);
+    const newImages = uploadedFiles.map((file) => `https://materialmart.shop/uploads/product/${file.filename}`);
 
     const parseJsonArray = (value) => {
       if (value === undefined) return undefined;
