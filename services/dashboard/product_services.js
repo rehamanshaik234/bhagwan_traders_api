@@ -16,7 +16,7 @@ router.get("/getAllProducts", [authenticateToken.validJWTNeeded, getAllProducts]
 router.get("/getAllBrands", [authenticateToken.validJWTNeeded, getAllBrands]);
 router.put("/enableProduct/:id", [authenticateToken.validJWTNeeded, enableProduct]);
 
-router.post("/addProduct", [authenticateToken.validJWTNeeded, uploadProductImage.array("files"), addProduct]);
+router.post("/addProduct", [authenticateToken.validJWTNeeded, handleAddProductUpload, addProduct]);
 router.get("/productById", [authenticateToken.validJWTNeeded, getProductById]);
 router.get("/allProducts", [authenticateToken.validJWTNeeded, getAllProducts]);
 
@@ -60,19 +60,41 @@ function validateProduct(data) {
   return null;
 }
 
-function handleEditProductUpload(req, res, next) {
-  uploadProductImage.fields([
-    { name: "add_images", maxCount: 20 },
-    { name: "add_images[]", maxCount: 20 },
-    { name: "files", maxCount: 20 },
-    { name: "files[]", maxCount: 20 },
-  ])(req, res, (err) => {
+function handleAddProductUpload(req, res, next) {
+  uploadProductImage.any()(req, res, (err) => {
     if (err) {
       return res.status(400).send({
         success: false,
         message: err.message,
       });
     }
+
+    // Convert multer file array into keyed object so handlers can use req.files[fieldName]
+    req.files = (req.files || []).reduce((acc, file) => {
+      if (!acc[file.fieldname]) acc[file.fieldname] = [];
+      acc[file.fieldname].push(file);
+      return acc;
+    }, {});
+
+    next();
+  });
+}
+
+function handleEditProductUpload(req, res, next) {
+  uploadProductImage.any()(req, res, (err) => {
+    if (err) {
+      return res.status(400).send({
+        success: false,
+        message: err.message,
+      });
+    }
+
+    // Convert multer file array into keyed object so handlers can use req.files[fieldName]
+    req.files = (req.files || []).reduce((acc, file) => {
+      if (!acc[file.fieldname]) acc[file.fieldname] = [];
+      acc[file.fieldname].push(file);
+      return acc;
+    }, {});
 
     next();
   });
@@ -101,9 +123,24 @@ async function getProductAssociations(productId) {
     fndb.getAllItemsByID(tables.product_brand_prices, "product_id", productId),
   ]);
 
+  // Fetch images for each brand price
+  const product_brand_prices_with_images = await Promise.all(
+    (product_brand_prices || []).map(async (brandPrice) => {
+      const brandImages = await fndb.customQuery(
+        tables.product_images,
+        `SELECT image_url FROM ${tables.product_images} WHERE product_id = ? AND brand_id = ?`,
+        [productId, brandPrice.brand_id]
+      );
+      return {
+        ...brandPrice,
+        images: brandImages ? brandImages.map(img => img.image_url) : [],
+      };
+    })
+  );
+
   return {
     product_variants: product_variants || [],
-    product_brand_prices: product_brand_prices || [],
+    product_brand_prices: product_brand_prices_with_images || [],
   };
 }
 
@@ -111,7 +148,7 @@ async function editProduct(req, res) {
   let resp = {};
   try {
     const id = req.params.id;
-    const { product_variants, product_brand_prices, deleted_variants, deleted_brand_prices } = req.body;
+    const { product_variants, product_brand_prices, deleted_variants, deleted_brand_prices, deleted_brand_images } = req.body;
     let updateData = JSON.parse(JSON.stringify(req.body));
     const prevImages = req.body.deleted_images ? JSON.parse(req.body.deleted_images) : [];
     const uploadedFiles = getUploadedFiles(req.files);
@@ -134,6 +171,7 @@ async function editProduct(req, res) {
     const parsedBrandPrices = parseJsonArray(product_brand_prices);
     const parsedDeletedVariants = parseJsonArray(deleted_variants);
     const parsedDeletedBrandPrices = parseJsonArray(deleted_brand_prices);
+    const parsedDeletedBrandImages = parseJsonArray(deleted_brand_images);
 
     if (prevImages.length === 0 && newImages.length > 0) {
       updateData.image_url = newImages[0];
@@ -141,6 +179,9 @@ async function editProduct(req, res) {
 
     if (updateData.deleted_images) {
       delete updateData.deleted_images;
+    }
+    if (updateData.deleted_brand_images) {
+      delete updateData.deleted_brand_images;
     }
     if (updateData.product_variants !== undefined) {
       delete updateData.product_variants;
@@ -171,7 +212,7 @@ async function editProduct(req, res) {
       updateData.sub_category_id = Number(updateData.sub_category_id);
     }
 
-    // Add new images
+    // Add new general images
     await Promise.all(
       newImages.map(async (url) => {
         await fndb.addNewItem(tables.product_images, {
@@ -181,17 +222,31 @@ async function editProduct(req, res) {
       })
     );
 
-    // Remove deleted images
+    // Remove deleted general images
     await Promise.all(
       prevImages.map(async (url) => {
         await fndb.customQuery(
           tables.product_images,
-          `DELETE FROM ${tables.product_images} WHERE image_url = ?`,
+          `DELETE FROM ${tables.product_images} WHERE image_url = ? AND brand_id IS NULL`,
           [url]
         );
         deleteProductImage(url);
       })
     );
+
+    // Remove deleted brand-specific images
+    if (parsedDeletedBrandImages && Array.isArray(parsedDeletedBrandImages)) {
+      await Promise.all(
+        parsedDeletedBrandImages.map(async (imageUrl) => {
+          await fndb.customQuery(
+            tables.product_images,
+            `DELETE FROM ${tables.product_images} WHERE image_url = ? AND brand_id IS NOT NULL`,
+            [imageUrl]
+          );
+          deleteProductImage(imageUrl);
+        })
+      );
+    }
 
     // Update core product data
     const result = await fndb.updateItem(tables.products, id, updateData);
@@ -232,12 +287,29 @@ async function editProduct(req, res) {
       );
     }
 
-    // Add new brand prices if provided
+    // Add new brand prices with brand-specific images if provided
     if (parsedBrandPrices && Array.isArray(parsedBrandPrices)) {
       await Promise.all(
         parsedBrandPrices.map(async (price) => {
           price.product_id = parseInt(id);
           await fndb.addNewItem(tables.product_brand_prices, price);
+          
+          // Add brand-specific images if provided
+          const brandImageFieldName = `brand_images_${price.brand_id}`;
+          const brandFiles = req.files?.[brandImageFieldName] || [];
+          
+          if (brandFiles.length > 0) {
+            await Promise.all(
+              brandFiles.map(async (file) => {
+                const brandImageUrl = `https://materialmart.shop/uploads/product/${file.filename}`;
+                await fndb.addNewItem(tables.product_images, {
+                  product_id: parseInt(id),
+                  image_url: brandImageUrl,
+                  brand_id: price.brand_id,
+                });
+              })
+            );
+          }
         })
       );
     }
@@ -441,12 +513,21 @@ async function addProduct(req, res) {
   var resp = new Object();
   try {
     const _path = path.join(__dirname, "../../uploads/product");
-    const fileUrls = req.files.map(
+    
+    // Get general product files (if any)
+    const generalFiles = [
+      ...(req.files?.files || []),
+      ...(req.files?.["files[]"] || []),
+    ];
+    
+    const fileUrls = generalFiles.map(
       (file) =>
         `https://materialmart.shop/uploads/product/${file.filename}`
-    ); // Create an array of file URLs
+    );
+    
     var body = JSON.parse(JSON.stringify(req.body));
     const {product_variants, product_brand_prices} = req.body;
+    
     if(fileUrls.length > 0) {
       body.image_url = fileUrls[0]; // Set the first image URL as the main image
     }
@@ -481,33 +562,57 @@ async function addProduct(req, res) {
     if (result != null) {
       body.id = result; // Get the inserted ID from the result.
       body.created_at = new Date().toISOString();
-      console.log("New Product ID:", parsedVariants);
+      console.log("New Product ID:", result);
+      
+      // Add product variants
       if(parsedVariants && Array.isArray(parsedVariants)){
         await Promise.all(parsedVariants.map(async (variant) => {
           variant.product_id = result;
           await fndb.addNewItem(tables.productVariants, variant);
         }));
       }
+      
+      // Add product brand prices with brand-specific images
       if(parsedBrandPrices && Array.isArray(parsedBrandPrices)){
         await Promise.all(parsedBrandPrices.map(async (price) => {
           price.product_id = result;
           await fndb.addNewItem(tables.product_brand_prices, price);
+          
+          // Add brand-specific images if provided
+          const brandImageFieldName = `brand_images_${price.brand_id}`;
+          const brandFiles = req.files?.[brandImageFieldName] || [];
+          
+          if (brandFiles.length > 0) {
+            await Promise.all(
+              brandFiles.map(async (file) => {
+                const brandImageUrl = `https://materialmart.shop/uploads/product/${file.filename}`;
+                await fndb.addNewItem(tables.product_images, {
+                  product_id: result,
+                  image_url: brandImageUrl,
+                  brand_id: price.brand_id,
+                });
+              })
+            );
+          }
         }));
+      }
+
+      // Add general product images (not brand-specific)
+      if (fileUrls.length > 0) {
+        await Promise.all(
+          fileUrls.map(async (url) => {
+            await fndb.addNewItem(tables.product_images, {
+              product_id: result,
+              image_url: url,
+            });
+          })
+        );
       }
 
       body.product_variants = Array.isArray(parsedVariants) ? parsedVariants : [];
       body.product_brand_prices = Array.isArray(parsedBrandPrices) ? parsedBrandPrices : [];
-
-      await Promise.all(
-        fileUrls.map(async (url, index) => {
-          await fndb.addNewItem(tables.product_images, {
-            product_id: result,
-            image_url: url,
-          });
-        })
-      );
-
       body.image_urls = fileUrls; // Add the image URLs to the response body
+      
       resp = {
         status: true,
         message: `Product Added Successfully`,
@@ -677,13 +782,11 @@ async function getAllProducts(req, res) {
           sub_category: {
             id: row.sc_id,
             name: row.sc_name,
-            image_url: row.sc_image_url,
             description: row.sc_description,
           },
           category: {
             id: row.c_id,
             name: row.c_name,
-            image_url: row.c_image_url,
             description: row.c_description,
           },
         };

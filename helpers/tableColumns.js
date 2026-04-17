@@ -155,6 +155,7 @@ const ProductImagesCols = {
   id: "id",
   product_id: "product_id",
   image_url: "image_url",
+  brand_id : "brand_id"
 };
 
 const SubCategoryCols = {

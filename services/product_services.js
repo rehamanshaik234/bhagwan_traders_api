@@ -98,7 +98,20 @@ async function getAllProducts(req, res) {
         ) AS brand
         FROM ${tableNames.product_brand_prices} pbp
         LEFT JOIN ${tableNames.brands} as b ON pbp.brand_id = b.id
-        WHERE pbp.product_id = ?`, [productId]);      }catch(e){}
+        WHERE pbp.product_id = ?`, [row.id]);
+
+        // Add brand images for each brand price
+        brands = await Promise.all(brands.map(async (brandPrice) => {
+          const brandImages = await fndb.customQuery(
+            `SELECT image_url FROM ${tableNames.product_images} WHERE product_id = ? AND brand_id = ?`,
+            [row.id, brandPrice.brand_id]
+          );
+          return {
+            ...brandPrice,
+            image_urls: brandImages ? brandImages.map(img => img.image_url) : [],
+          };
+        }));
+      }catch(e){}
       try{
         productVariants = await fndb.customQuery(`SELECT * FROM ${tableNames.productVariants} WHERE ${ProductVariantCols.product_id} = ?`, [row.id]);
       }catch(e){}
@@ -191,7 +204,18 @@ async function getProductById(req, res) {
         FROM ${tableNames.product_brand_prices} pbp
         LEFT JOIN ${tableNames.brands} as b ON pbp.brand_id = b.id
         WHERE ${ProductBrandPriceCols.product_id} = ?`, [productId]);
-      product.brands = brands;
+      
+      // Add brand images for each brand price
+      product.brands = await Promise.all(brands.map(async (brandPrice) => {
+        const brandImages = await fndb.customQuery(
+          `SELECT image_url FROM ${tableNames.product_images} WHERE product_id = ? AND brand_id = ?`,
+          [productId, brandPrice.brand_id]
+        );
+        return {
+          ...brandPrice,
+          image_urls: brandImages ? brandImages.map(img => img.image_url) : [],
+        };
+      }));
 
       const productVariants = await fndb.customQuery(`SELECT * FROM ${tableNames.productVariants} WHERE ${ProductVariantCols.product_id} = ?`, [productId]);
       product.variants = productVariants;
@@ -278,7 +302,17 @@ async function getProductsBySubCategoryId(req, res) {
           LEFT JOIN ${tableNames.brands} as b ON pbp.brand_id = b.id
           WHERE ${ProductBrandPriceCols.product_id} = ?`, [product.id]);
           
-        product.brands = brands;      
+        // Add brand images for each brand price
+        product.brands = await Promise.all(brands.map(async (brandPrice) => {
+          const brandImages = await fndb.customQuery(
+            `SELECT image_url FROM ${tableNames.product_images} WHERE product_id = ? AND brand_id = ?`,
+            [product.id, brandPrice.brand_id]
+          );
+          return {
+            ...brandPrice,
+            image_urls: brandImages ? brandImages.map(img => img.image_url) : [],
+          };
+        }));      
           
         const productVariants = await fndb.customQuery(`SELECT * FROM ${tableNames.productVariants} WHERE ${ProductVariantCols.product_id} = ?`, [product.id]);
         product.variants = productVariants;
@@ -370,7 +404,18 @@ async function searchProducts(req, res) {
           FROM ${tableNames.product_brand_prices} pbp
           LEFT JOIN ${tableNames.brands} as b ON pbp.brand_id = b.id
           WHERE ${ProductBrandPriceCols.product_id} = ?`, [product.id]);
-        product.brands = brands;
+      
+      // Add brand images for each brand price
+      product.brands = await Promise.all(brands.map(async (brandPrice) => {
+        const brandImages = await fndb.customQuery(
+          `SELECT image_url FROM ${tableNames.product_images} WHERE product_id = ? AND brand_id = ?`,
+          [product.id, brandPrice.brand_id]
+        );
+        return {
+          ...brandPrice,
+          image_urls: brandImages ? brandImages.map(img => img.image_url) : [],
+        };
+      }));
 
         const productVariants = await fndb.customQuery(`SELECT * FROM ${tableNames.productVariants} WHERE ${ProductVariantCols.product_id} = ?`, [product.id]);
         product.variants = productVariants;
@@ -457,7 +502,18 @@ async function getTopFeaturedProducts(req, res) {
           FROM ${tableNames.product_brand_prices} pbp
           LEFT JOIN ${tableNames.brands} as b ON pbp.brand_id = b.id
           WHERE ${ProductBrandPriceCols.product_id} = ?`, [product.id]);
-        product.brands = brands;
+        
+        // Add brand images for each brand price
+        product.brands = await Promise.all(brands.map(async (brandPrice) => {
+          const brandImages = await fndb.customQuery(
+            `SELECT image_url FROM ${tableNames.product_images} WHERE product_id = ? AND brand_id = ?`,
+            [product.id, brandPrice.brand_id]
+          );
+          return {
+            ...brandPrice,
+            image_urls: brandImages ? brandImages.map(img => img.image_url) : [],
+          };
+        }));
         
         const productVariants = await fndb.customQuery(`SELECT * FROM ${tableNames.productVariants} WHERE ${ProductVariantCols.product_id} = ?`, [product.id]);
         product.variants = productVariants;
@@ -544,7 +600,18 @@ async function getBestSellerProducts(req, res) {
           FROM ${tableNames.product_brand_prices} pbp
           LEFT JOIN ${tableNames.brands} as b ON pbp.brand_id = b.id
           WHERE ${ProductBrandPriceCols.product_id} = ?`, [product.id]);
-        product.brands = brands;
+        
+        // Add brand images for each brand price
+        product.brands = await Promise.all(brands.map(async (brandPrice) => {
+          const brandImages = await fndb.customQuery(
+            `SELECT image_url FROM ${tableNames.product_images} WHERE product_id = ? AND brand_id = ?`,
+            [product.id, brandPrice.brand_id]
+          );
+          return {
+            ...brandPrice,
+            image_urls: brandImages ? brandImages.map(img => img.image_url) : [],
+          };
+        }));
         
         const productVariants = await fndb.customQuery(`SELECT * FROM ${tableNames.productVariants} WHERE ${ProductVariantCols.product_id} = ?`, [product.id]);
         product.variants = productVariants;
@@ -632,6 +699,18 @@ async function getSimilarProducts(req, res) {
           FROM ${tableNames.product_brand_prices} pbp
           LEFT JOIN ${tableNames.brands} as b ON pbp.brand_id = b.id
           WHERE ${ProductBrandPriceCols.product_id} = ?`, [product.id]);
+        
+        // Add brand images for each brand price
+        brands = await Promise.all(brands.map(async (brandPrice) => {
+          const brandImages = await fndb.customQuery(
+            `SELECT image_url FROM ${tableNames.product_images} WHERE product_id = ? AND brand_id = ?`,
+            [product.id, brandPrice.brand_id]
+          );
+          return {
+            ...brandPrice,
+            image_urls: brandImages ? brandImages.map(img => img.image_url) : [],
+          };
+        }));
         
         brands = brands.filter(brand => brand.brand_id != brand_id); // Exclude the brand of the original product
         product.brands = brands ?? [];

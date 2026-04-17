@@ -1,4 +1,5 @@
 const tableNames = require("./../tableNames.js");
+const { product_brand_prices } = require("./tableNames.js");
 
 const UserCols = {
   id: "id",
@@ -153,6 +154,7 @@ const ProductImagesCols = {
   id: "id",
   product_id: "product_id",
   image_url: "image_url",
+  brand_id : "brand_id"
 };
 
 const SubCategoryCols = {
